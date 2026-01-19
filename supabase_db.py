@@ -144,7 +144,7 @@ class SupabaseDB:
             logger.error(f"Failed to get interaction: {e}")
             return None
 
-     def add_junk_filter(self, pattern: str, article_url: str = None, article_title: str = None, pattern_type: str = 'title') -> bool:
+    def add_junk_filter(self, pattern: str, article_url: str = None, article_title: str = None, pattern_type: str = 'title') -> bool:
         """Add a junk filter pattern."""
         try:
             data = {
