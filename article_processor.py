@@ -102,7 +102,7 @@ class ArticleProcessor:
                 # Extract article content
                 article_data = self.extract_article_content(url)
 
-                  if article_data['extraction_success']:
+                if article_data['extraction_success']:
                     # Filter out junk pages by title
                     title_lower = article_data['title'].lower()
                     
