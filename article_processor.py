@@ -114,7 +114,10 @@ class ArticleProcessor:
                         'subscribe', 'unsubscribe', 'join now', 'newsletter',
                         'explore hbr', 'about hbr', 'follow hbr', 'manage my account',
                         'view all', 'see all', 'browse', 'home page',
-                        'advertising', 'partnerships', 'solutions for', 'data & visuals'
+                        'advertising', 'partnerships', 'solutions for', 'data & visuals',
+                        'your next breakthrough', 'books by', 'solved podcast', 'life advice',
+                        'the magazine', 'solved membership', 'strategy summit', 'events from',
+                        'the wall street journal', 'group rates', 'view special rates'
                     ]
                     
                     # Skip if title matches junk patterns
