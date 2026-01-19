@@ -69,10 +69,8 @@ document.getElementById('triggerNow').addEventListener('click', async () => {
 
         if (data.success) {
             showStatus('✓ Digest generation started! Check your email in a few minutes.', 'success');
-            // Refresh status after a delay
-            setTimeout(() => {
-                location.reload();
-            }, 3000);
+            // Don't reload - just re-enable buttons
+            disableButtons(false);
         } else {
             showStatus('✗ ' + data.message, 'error');
         }
@@ -105,10 +103,8 @@ document.getElementById('triggerWeek').addEventListener('click', async () => {
 
         if (data.success) {
             showStatus('✓ Digest generation started! Check your email in a few minutes.', 'success');
-            // Refresh status after a delay
-            setTimeout(() => {
-                location.reload();
-            }, 3000);
+            // Don't reload - just re-enable buttons
+            disableButtons(false);
         } else {
             showStatus('✗ ' + data.message, 'error');
         }
@@ -124,6 +120,36 @@ document.getElementById('refreshStatus').addEventListener('click', () => {
     location.reload();
 });
 
+// Load digest function
+function loadDigest() {
+    const digestFrame = document.getElementById('digestFrame');
+    const loadButton = document.getElementById('loadDigest');
+
+    loadButton.textContent = 'Loading...';
+    loadButton.disabled = true;
+
+    fetch('/view-digest')
+        .then(response => response.text())
+        .then(html => {
+            const blob = new Blob([html], { type: 'text/html' });
+            digestFrame.src = URL.createObjectURL(blob);
+            loadButton.textContent = 'Refresh Digest';
+            loadButton.disabled = false;
+        })
+        .catch(error => {
+            console.error('Error loading digest:', error);
+            digestFrame.srcdoc = '<div style="padding: 20px; text-align: center;"><h2>No digest available yet</h2><p>Generate a digest first using the "Generate Digest Now" button above.</p></div>';
+            loadButton.textContent = 'Refresh Digest';
+            loadButton.disabled = false;
+        });
+}
+
+// Load digest button
+document.getElementById('loadDigest').addEventListener('click', loadDigest);
+
+// Auto-load digest when page loads
+loadDigest();
+
 // Auto-refresh status every 30 seconds (but don't reload if digest is visible)
 setInterval(async () => {
     try {
@@ -133,11 +159,11 @@ setInterval(async () => {
         // Update last run info if changed
         if (data.last_run && data.last_run.timestamp) {
             const currentTimestamp = document.querySelector('.status-item .value')?.textContent;
-            const digestVisible = document.getElementById('digestContent')?.style.display !== 'none';
-            
-            // Only reload if digest is not currently displayed
-            if (currentTimestamp !== data.last_run.timestamp && !digestVisible) {
-                location.reload();
+
+            // Only reload if timestamp changed AND we're not viewing a digest
+            if (currentTimestamp !== data.last_run.timestamp) {
+                // Auto-refresh the digest iframe instead of reloading the whole page
+                loadDigest();
             }
         }
     } catch (error) {
