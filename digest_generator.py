@@ -175,11 +175,30 @@ class DigestGenerator:
                 # Extract just the source name from email
                 if '<' in source:
                     source = source.split('<')[0].strip()
-
+                
+                # Escape single quotes in title for JavaScript
+                safe_title = article['title'].replace("'", "\\'").replace('"', '\\"')
+                
                 html += f"""
             <div class="article">
-                <div class="article-title">
-                    <a href="{article['url']}" target="_blank">{article['title']}</a>
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                    <div class="article-title" style="flex: 1;">
+                        <a href="{article['url']}" target="_blank">{article['title']}</a>
+                    </div>
+                    <div style="display: flex; gap: 8px; margin-left: 16px;">
+                        <button onclick="voteArticle('{article['url']}', '{safe_title}', '{source}', 1)" 
+                                style="background: #48bb78; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px;">
+                            👍
+                        </button>
+                        <button onclick="voteArticle('{article['url']}', '{safe_title}', '{source}', -1)" 
+                                style="background: #f56565; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px;">
+                            👎
+                        </button>
+                        <button onclick="markAsRead('{article['url']}', '{safe_title}', '{source}')" 
+                                style="background: #4299e1; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px;">
+                            ✓ Read
+                        </button>
+                    </div>
                 </div>
                 <div class="article-meta">
                     Source: {source}
@@ -194,7 +213,7 @@ class DigestGenerator:
         </div>
 """
 
-        html += f"""
+       html += f"""
         <div class="footer">
             <p>This digest was automatically generated from your newsletter subscriptions.</p>
             <p style="margin-top: 10px; font-size: 12px;">
@@ -202,6 +221,51 @@ class DigestGenerator:
             </p>
         </div>
     </div>
+    
+    <script>
+        function voteArticle(url, title, source, vote) {{
+            fetch('/api/vote', {{
+                method: 'POST',
+                headers: {{ 'Content-Type': 'application/json' }},
+                body: JSON.stringify({{
+                    article_url: url,
+                    article_title: title,
+                    article_source: source,
+                    vote: vote
+                }})
+            }})
+            .then(response => response.json())
+            .then(data => {{
+                if (data.success) {{
+                    alert(vote === 1 ? '👍 Upvoted!' : '👎 Downvoted!');
+                }} else {{
+                    alert('Error: ' + data.message);
+                }}
+            }})
+            .catch(error => alert('Error: ' + error));
+        }}
+        
+        function markAsRead(url, title, source) {{
+            fetch('/api/mark-read', {{
+                method: 'POST',
+                headers: {{ 'Content-Type': 'application/json' }},
+                body: JSON.stringify({{
+                    article_url: url,
+                    article_title: title,
+                    article_source: source
+                }})
+            }})
+            .then(response => response.json())
+            .then(data => {{
+                if (data.success) {{
+                    alert('✓ Marked as read!');
+                }} else {{
+                    alert('Error: ' + data.message);
+                }}
+            }})
+            .catch(error => alert('Error: ' + error));
+        }}
+    </script>
 </body>
 </html>
 """
