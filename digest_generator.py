@@ -213,7 +213,7 @@ class DigestGenerator:
         </div>
 """
 
-       html += f"""
+        html += f"""
         <div class="footer">
             <p>This digest was automatically generated from your newsletter subscriptions.</p>
             <p style="margin-top: 10px; font-size: 12px;">
