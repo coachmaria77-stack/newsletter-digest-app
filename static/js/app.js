@@ -146,7 +146,7 @@ function loadDigest() {
 document.getElementById('loadDigest').addEventListener('click', loadDigest);
 
 // Auto-load digest when page loads
-loadDigest();
+setTimeout(() => loadDigest(), 100);
 
 // Auto-refresh status every 30 seconds (but don't reload if digest is visible)
 setInterval(async () => {
