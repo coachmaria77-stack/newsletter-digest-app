@@ -125,7 +125,31 @@
             </div>
         </div>
     </div>
-
+<script>
+        // Load digest button
+        document.getElementById('loadDigest').addEventListener('click', function() {
+            const digestFrame = document.getElementById('digestFrame');
+            const digestContent = document.getElementById('digestContent');
+            
+            // Show the iframe container
+            digestContent.style.display = 'block';
+            
+            // Load the digest into the iframe
+            fetch('/view-digest')
+                .then(response => response.text())
+                .then(html => {
+                    const blob = new Blob([html], { type: 'text/html' });
+                    digestFrame.src = URL.createObjectURL(blob);
+                    this.textContent = 'Refresh Digest';
+                })
+                .catch(error => {
+                    digestContent.innerHTML = '<p style="color: red;">No digest available yet. Generate one first!</p>';
+                });
+        });
+    </script>
+    
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>
