@@ -147,15 +147,22 @@ def process_and_send_digest(days_back=1):
         categorized_articles = article_processor.categorize_articles(unique_articles)
 
         # Step 6: Generate digest summary
-        digest_summary = summarizer.generate_digest_summary(categorized_articles)
+digest_summary = summarizer.generate_digest_summary(categorized_articles)
 
-        # Step 7: Send digest email
-        logger.info("Sending digest email...")
-        success = digest_generator.create_and_send_digest(
-            categorized_articles,
-            config['digest_recipient'],
-            digest_summary
-        )
+# Step 6.5: Save digest HTML to file
+logger.info("Generating digest HTML...")
+html_content = digest_generator.generate_html_digest(categorized_articles, digest_summary)
+digest_file_path = '/tmp/last_digest.html'
+with open(digest_file_path, 'w', encoding='utf-8') as f:
+    f.write(html_content)
+logger.info(f"Digest saved to {digest_file_path}")
+
+# Step 7: Send digest email
+logger.info("Sending digest email...")
+current_date = datetime.now().strftime("%B %d, %Y")
+subject = f"Your Daily News Digest - {current_date}"
+success = digest_generator.send_digest(config['digest_recipient'], subject, html_content)
+    
 
         if success:
             last_run_data['status'] = 'Success'
@@ -190,6 +197,18 @@ def index():
                          config=config,
                          last_run=last_run_data,
                          scheduler_running=scheduler.running)
+    
+@app.route('/view-digest')
+def view_digest():
+    """View the last generated digest."""
+    try:
+        digest_file_path = '/tmp/last_digest.html'
+        with open(digest_file_path, 'r', encoding='utf-8') as f:
+            html_content = f.read()
+        return html_content
+    except FileNotFoundError:
+        return "<h1>No digest available yet</h1><p>Generate a digest first, then come back to view it.</p><p><a href='/'>Go back to dashboard</a></p>"
+
 
 
 @app.route('/api/status')
