@@ -143,3 +143,38 @@ class SupabaseDB:
         except Exception as e:
             logger.error(f"Failed to get interaction: {e}")
             return None
+
+   def add_junk_filter(self, pattern: str, article_url: str = None, article_title: str = None, pattern_type: str = 'title') -> bool:
+        """Add a junk filter pattern."""
+        try:
+            data = {
+                'pattern': pattern.lower(),
+                'pattern_type': pattern_type,
+                'article_url': article_url,
+                'article_title': article_title
+            }
+            
+            result = self.client.table('junk_filters').upsert(
+                data,
+                on_conflict='pattern'
+            ).execute()
+            
+            logger.info(f"Added junk filter: {pattern}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to add junk filter: {e}")
+            return False
+    
+    def get_junk_filters(self) -> List[str]:
+        """Get list of all junk filter patterns."""
+        try:
+            result = self.client.table('junk_filters').select('pattern').execute()
+            
+            patterns = [row['pattern'] for row in result.data]
+            logger.info(f"Retrieved {len(patterns)} junk filters")
+            return patterns
+            
+        except Exception as e:
+            logger.error(f"Failed to get junk filters: {e}")
+            return []
