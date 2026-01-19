@@ -1,4 +1,7 @@
-import openai
+try:
+    import openai
+except ImportError:
+    openai = None
 from typing import List, Dict, Optional
 import logging
 
@@ -17,9 +20,9 @@ class ArticleSummarizer:
             api_key: OpenAI API key. If None, will use fallback methods.
         """
         self.api_key = api_key
-        self.use_ai = bool(api_key)
+        self.use_ai = bool(api_key) and openai is not None
 
-        if self.use_ai:
+        if self.use_ai and openai is not None:
             openai.api_key = api_key
 
     def summarize_article(self, article: Dict, max_words: int = 100) -> str:
