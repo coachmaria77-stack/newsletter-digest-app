@@ -4,7 +4,6 @@ apscheduler==3.10.4
 python-dotenv==1.0.0
 beautifulsoup4==4.12.2
 requests==2.31.0
-newspaper3k==0.2.8
 scikit-learn==1.4.0
 numpy==1.26.2
 lxml==5.1.0
