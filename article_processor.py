@@ -118,6 +118,11 @@ class ArticleProcessor:
                         'your next breakthrough', 'books by', 'solved podcast', 'life advice',
                         'the magazine', 'solved membership', 'strategy summit', 'events from',
                         'the wall street journal', 'group rates', 'view special rates'
+                        # Add these new patterns:
+                        'sale', '% off', 'discount', 'coupon', 'promo', 'deal',
+                        'shop now', 'buy now', 'order now', 'limited time',
+                        'anthropologie', 'tumbler', 'water bottle', 'product',
+                        'ends tonight', 'extra', 'shipping', 'valentine'
                     ]
                     
                     # Skip if title matches junk patterns
