@@ -108,44 +108,16 @@
                 <div id="actionStatus" class="action-status"></div>
             </div>
 
-            <!-- Setup Instructions -->
+            <!-- View Digest -->
             <div class="card">
-                <h2>📋 Setup Instructions</h2>
+                <h2>📰 View Your Digest</h2>
                 <div class="instructions">
-                    <ol>
-                        <li>
-                            <strong>Create a Yahoo App Password</strong>
-                            <ul>
-                                <li>Go to Yahoo Account Security settings</li>
-                                <li>Generate an app password for "Other App"</li>
-                                <li>Save this password for configuration</li>
-                            </ul>
-                        </li>
-                        <li>
-                            <strong>Configure Environment Variables</strong>
-                            <ul>
-                                <li>Copy <code>.env.example</code> to <code>.env</code></li>
-                                <li>Fill in your Yahoo email and app password</li>
-                                <li>Optionally add OpenAI API key for better summaries</li>
-                                <li>Set your preferred digest schedule</li>
-                            </ul>
-                        </li>
-                        <li>
-                            <strong>Optional: Specify Newsletter Senders</strong>
-                            <ul>
-                                <li>Add specific newsletter sender emails to filter</li>
-                                <li>Leave empty to auto-detect newsletters</li>
-                            </ul>
-                        </li>
-                        <li>
-                            <strong>Test & Deploy</strong>
-                            <ul>
-                                <li>Test your email connection using the button above</li>
-                                <li>Trigger a manual digest to verify setup</li>
-                                <li>Deploy to Railway, Render, or PythonAnywhere</li>
-                            </ul>
-                        </li>
-                    </ol>
+                    <p>After generating a digest, you can view it directly in your browser:</p>
+                    <div class="actions">
+                        <a href="/view-digest" target="_blank" class="btn btn-primary" style="text-decoration: none; display: inline-block;">
+                            View Last Digest
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
