@@ -1,6 +1,5 @@
 import requests
 from bs4 import BeautifulSoup
-from newspaper import Article
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
@@ -26,7 +25,7 @@ class ArticleProcessor:
 
     def extract_article_content(self, url: str) -> Dict:
         """
-        Extract article content from a URL.
+        Extract article content from a URL using BeautifulSoup.
 
         Returns:
             Dictionary with title, text, authors, publish_date, top_image
@@ -42,58 +41,40 @@ class ArticleProcessor:
         }
 
         try:
-            # Try using newspaper3k first (better for news articles)
-            article = Article(url)
-            article.download()
-            article.parse()
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+            response = requests.get(url, headers=headers, timeout=10)
+            soup = BeautifulSoup(response.content, 'html.parser')
 
-            article_data['title'] = article.title
-            article_data['text'] = article.text
-            article_data['authors'] = article.authors
-            article_data['publish_date'] = article.publish_date
-            article_data['top_image'] = article.top_image
-            article_data['extraction_success'] = True
+            # Extract title
+            title_tag = soup.find('title')
+            if title_tag:
+                article_data['title'] = title_tag.get_text().strip()
 
-            logger.info(f"Successfully extracted article: {article.title}")
+            # Extract main content
+            article_tags = soup.find_all(['article', 'main', 'div'],
+                                        class_=re.compile(r'article|content|post|story', re.I))
+
+            text_content = ""
+            if article_tags:
+                for tag in article_tags:
+                    paragraphs = tag.find_all('p')
+                    text_content += ' '.join([p.get_text() for p in paragraphs])
+                    if len(text_content) > 200:
+                        break
+
+            article_data['text'] = text_content.strip()
+            article_data['extraction_success'] = bool(text_content)
+
+            logger.info(f"Extracted article: {article_data['title']}")
 
         except Exception as e:
-            logger.warning(f"Newspaper3k extraction failed for {url}: {e}")
-
-            # Fallback to basic BeautifulSoup extraction
-            try:
-                headers = {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                }
-                response = requests.get(url, headers=headers, timeout=10)
-                soup = BeautifulSoup(response.content, 'html.parser')
-
-                # Try to extract title
-                title_tag = soup.find('title')
-                if title_tag:
-                    article_data['title'] = title_tag.get_text().strip()
-
-                # Try to extract main content (heuristic)
-                # Look for common article containers
-                article_tags = soup.find_all(['article', 'main', 'div'],
-                                            class_=re.compile(r'article|content|post|story', re.I))
-
-                text_content = ""
-                if article_tags:
-                    for tag in article_tags:
-                        paragraphs = tag.find_all('p')
-                        text_content += ' '.join([p.get_text() for p in paragraphs])
-                        if len(text_content) > 200:  # Found enough content
-                            break
-
-                article_data['text'] = text_content.strip()
-                article_data['extraction_success'] = bool(text_content)
-
-                logger.info(f"Fallback extraction for {url}: {len(text_content)} chars")
-
-            except Exception as e2:
-                logger.error(f"All extraction methods failed for {url}: {e2}")
+            logger.error(f"Extraction failed for {url}: {e}")
 
         return article_data
+
+    
 
     def extract_articles_from_newsletters(self, newsletters: List[Dict]) -> List[Dict]:
         """
