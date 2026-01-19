@@ -124,7 +124,7 @@ document.getElementById('refreshStatus').addEventListener('click', () => {
     location.reload();
 });
 
-// Auto-refresh status every 30 seconds
+// Auto-refresh status every 30 seconds (but don't reload if digest is visible)
 setInterval(async () => {
     try {
         const response = await fetch('/api/status');
@@ -133,7 +133,10 @@ setInterval(async () => {
         // Update last run info if changed
         if (data.last_run && data.last_run.timestamp) {
             const currentTimestamp = document.querySelector('.status-item .value')?.textContent;
-            if (currentTimestamp !== data.last_run.timestamp) {
+            const digestVisible = document.getElementById('digestContent')?.style.display !== 'none';
+            
+            // Only reload if digest is not currently displayed
+            if (currentTimestamp !== data.last_run.timestamp && !digestVisible) {
                 location.reload();
             }
         }
