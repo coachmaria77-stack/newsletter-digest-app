@@ -12,6 +12,7 @@ from email_processor import EmailProcessor
 from article_processor import ArticleProcessor
 from summarizer import ArticleSummarizer
 from digest_generator import DigestGenerator
+from supabase_db import SupabaseDB
 
 # Load environment variables
 load_dotenv()
@@ -57,6 +58,21 @@ def get_config():
         'digest_minute': int(os.getenv('DIGEST_MINUTE', '0'))
     }
 
+
+def get_supabase_db():
+    """Get Supabase database instance."""
+    try:
+        supabase_url = os.getenv('SUPABASE_URL')
+        supabase_key = os.getenv('SUPABASE_KEY')
+        
+        if not supabase_url or not supabase_key:
+            logger.warning("Supabase credentials not configured")
+            return None
+        
+        return SupabaseDB(supabase_url, supabase_key)
+    except Exception as e:
+        logger.error(f"Failed to initialize Supabase: {e}")
+        return None
 
 def process_and_send_digest(days_back=1):
     """
@@ -116,13 +132,21 @@ def process_and_send_digest(days_back=1):
         # Step 2: Extract articles from newsletters
         logger.info("Extracting articles...")
         articles = article_processor.extract_articles_from_newsletters(newsletters)
-
+        
+        # Step 2.5: Filter out read articles
+        db = get_supabase_db()
+        if db:
+            read_urls = db.get_read_article_urls()
+            if read_urls:
+                logger.info(f"Filtering out {len(read_urls)} read articles")
+                articles = [a for a in articles if a['url'] not in read_urls]
+                logger.info(f"After filtering: {len(articles)} articles remaining")
+        
         if not articles:
             logger.warning("No articles extracted")
             last_run_data['status'] = 'No articles extracted'
             last_run_data['article_count'] = 0
             return False
-
         logger.info(f"Extracted {len(articles)} articles")
 
         # Step 3: Deduplicate articles
@@ -209,7 +233,126 @@ def view_digest():
     except FileNotFoundError:
         return "<h1>No digest available yet</h1><p>Generate a digest first, then come back to view it.</p><p><a href='/'>Go back to dashboard</a></p>"
 
+@app.route('/api/vote', methods=['POST'])
+def api_vote():
+    """API endpoint to save article vote."""
+    try:
+        data = request.json
+        article_url = data.get('article_url')
+        article_title = data.get('article_title')
+        article_source = data.get('article_source')
+        vote = data.get('vote')
+        
+        if not article_url or vote not in [-1, 0, 1]:
+            return jsonify({
+                'success': False,
+                'message': 'Invalid request data'
+            }), 400
+        
+        db = get_supabase_db()
+        if not db:
+            return jsonify({
+                'success': False,
+                'message': 'Supabase not configured'
+            }), 500
+        
+        existing = db.get_interaction(article_url)
+        
+        if existing:
+            success = db.update_vote(article_url, vote)
+        else:
+            success = db.save_interaction(
+                article_url, 
+                article_title, 
+                article_source,
+                vote=vote
+            )
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': 'Vote saved'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Failed to save vote'
+            }), 500
+            
+    except Exception as e:
+        logger.error(f"Error in api_vote: {e}")
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
 
+@app.route('/api/mark-read', methods=['POST'])
+def api_mark_read():
+    """API endpoint to mark article as read."""
+    try:
+        data = request.json
+        article_url = data.get('article_url')
+        article_title = data.get('article_title')
+        article_source = data.get('article_source')
+        
+        if not article_url:
+            return jsonify({
+                'success': False,
+                'message': 'Missing article_url'
+            }), 400
+        
+        db = get_supabase_db()
+        if not db:
+            return jsonify({
+                'success': False,
+                'message': 'Supabase not configured'
+            }), 500
+        
+        existing = db.get_interaction(article_url)
+        
+        if existing:
+            success = db.mark_as_read(article_url)
+        else:
+            success = db.save_interaction(
+                article_url,
+                article_title,
+                article_source,
+                is_read=True
+            )
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': 'Marked as read'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Failed to mark as read'
+            }), 500
+            
+    except Exception as e:
+        logger.error(f"Error in api_mark_read: {e}")
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@app.route('/history')
+def history():
+    """View article interaction history."""
+    db = get_supabase_db()
+    
+    if not db:
+        return render_template('history.html', 
+                             interactions=[],
+                             error="Supabase not configured")
+    
+    interactions = db.get_all_interactions(limit=200)
+    
+    return render_template('history.html', 
+                         interactions=interactions,
+                         error=None)
 
 @app.route('/api/status')
 def api_status():
