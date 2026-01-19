@@ -102,7 +102,29 @@ class ArticleProcessor:
                 # Extract article content
                 article_data = self.extract_article_content(url)
 
-                if article_data['extraction_success']:
+                  if article_data['extraction_success']:
+                    # Filter out junk pages by title
+                    title_lower = article_data['title'].lower()
+                    
+                    junk_title_patterns = [
+                        'contact us', 'privacy policy', 'cookie notice', 'cookie policy',
+                        'sign in', 'log in', 'login', 'register', 'registration',
+                        'linkedin', 'facebook', 'instagram', 'twitter', 'youtube',
+                        'app store', 'google play', 'terms of use', 'terms and conditions',
+                        'subscribe', 'unsubscribe', 'join now', 'newsletter',
+                        'explore hbr', 'about hbr', 'follow hbr', 'manage my account',
+                        'view all', 'see all', 'browse', 'home page',
+                        'advertising', 'partnerships', 'solutions for', 'data & visuals'
+                    ]
+                    
+                    # Skip if title matches junk patterns
+                    if any(pattern in title_lower for pattern in junk_title_patterns):
+                        continue
+                    
+                    # Skip if title is too short (likely navigation)
+                    if len(article_data['title']) < 15:
+                        continue
+                    
                     # Add newsletter metadata
                     article_data['newsletter_sender'] = newsletter.get('sender', '')
                     article_data['newsletter_subject'] = newsletter.get('subject', '')
