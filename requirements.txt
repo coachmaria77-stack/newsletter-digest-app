@@ -8,3 +8,4 @@ scikit-learn==1.4.0
 numpy==1.26.2
 lxml==5.1.0
 feedparser==6.0.10
+supabase==2.3.0
