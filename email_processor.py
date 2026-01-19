@@ -123,15 +123,44 @@ class EmailProcessor:
         # Find all URLs in the text
         url_pattern = r'https?://(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&/=]*)'
         urls = re.findall(url_pattern, text)
-
-        # Filter out common tracking/unsubscribe URLs
+        
+        # Comprehensive filter for junk URLs
         filtered_urls = []
-        exclude_patterns = ['unsubscribe', 'tracking', 'pixel', 'beacon', 'email-open']
-
+        exclude_patterns = [
+            'unsubscribe', 'tracking', 'pixel', 'beacon', 'email-open',
+            'facebook.com', 'instagram.com', 'twitter.com', 'x.com',
+            'linkedin.com/login', 'linkedin.com/in/', 'linkedin.com/company',
+            'youtube.com', 'tiktok.com', 'pinterest.com', 'spotify.com',
+            '/contact', '/privacy', '/terms', '/signin', '/login', '/signup',
+            '/unsubscribe', '/preferences', '/settings', '/account',
+            'app-store', 'play.google', 'itunes.apple',
+            'schema.org', 'mailto:', 'tel:', 'sms:',
+            '/feed', '/rss', '/sitemap'
+        ]
+        
+        # Exclude URLs that are just domain homepages (end with .com or .com/)
+        exclude_domains = [
+            'facebook.com', 'instagram.com', 'linkedin.com', 'twitter.com',
+            'youtube.com', 'tiktok.com', 'pinterest.com'
+        ]
+        
         for url in urls:
-            if not any(pattern in url.lower() for pattern in exclude_patterns):
+            url_lower = url.lower()
+            
+            # Skip if matches exclude patterns
+            if any(pattern in url_lower for pattern in exclude_patterns):
+                continue
+            
+            # Skip if it's just a social media homepage
+            skip = False
+            for domain in exclude_domains:
+                if url_lower == f'https://{domain}' or url_lower == f'https://{domain}/' or url_lower == f'http://{domain}' or url_lower == f'http://{domain}/':
+                    skip = True
+                    break
+            
+            if not skip:
                 filtered_urls.append(url)
-
+        
         return filtered_urls
 
     def fetch_newsletters(self, days_back: int = 1, specific_senders: Optional[List[str]] = None) -> List[Dict]:
