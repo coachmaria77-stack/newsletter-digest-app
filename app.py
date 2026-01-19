@@ -147,21 +147,21 @@ def process_and_send_digest(days_back=1):
         categorized_articles = article_processor.categorize_articles(unique_articles)
 
         # Step 6: Generate digest summary
-digest_summary = summarizer.generate_digest_summary(categorized_articles)
+        digest_summary = summarizer.generate_digest_summary(categorized_articles)
 
-# Step 6.5: Save digest HTML to file
-logger.info("Generating digest HTML...")
-html_content = digest_generator.generate_html_digest(categorized_articles, digest_summary)
-digest_file_path = '/tmp/last_digest.html'
-with open(digest_file_path, 'w', encoding='utf-8') as f:
-    f.write(html_content)
-logger.info(f"Digest saved to {digest_file_path}")
+        # Step 6.5: Save digest HTML to file
+        logger.info("Generating digest HTML...")
+        html_content = digest_generator.generate_html_digest(categorized_articles, digest_summary)
+        digest_file_path = '/tmp/last_digest.html'
+        with open(digest_file_path, 'w', encoding='utf-8') as f:
+        f.write(html_content)
+        logger.info(f"Digest saved to {digest_file_path}")
 
-# Step 7: Send digest email
-logger.info("Sending digest email...")
-current_date = datetime.now().strftime("%B %d, %Y")
-subject = f"Your Daily News Digest - {current_date}"
-success = digest_generator.send_digest(config['digest_recipient'], subject, html_content)
+        # Step 7: Send digest email
+        logger.info("Sending digest email...")
+        current_date = datetime.now().strftime("%B %d, %Y")
+        subject = f"Your Daily News Digest - {current_date}"
+        success = digest_generator.send_digest(config['digest_recipient'], subject, html_content)
     
 
         if success:
