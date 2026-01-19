@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newsletter Digest App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📰 Newsletter Digest App</h1>
+            <p class="subtitle">Your daily news digest, deduplicated and summarized</p>
+        </header>
+
+        <div class="dashboard">
+            <!-- Configuration Status -->
+            <div class="card">
+                <h2>⚙️ Configuration Status</h2>
+                <div class="status-grid">
+                    <div class="status-item">
+                        <span class="label">Email Configured:</span>
+                        <span class="value {{ 'success' if config['email_address'] else 'error' }}">
+                            {{ '✓ Yes' if config['email_address'] else '✗ No' }}
+                        </span>
+                    </div>
+                    <div class="status-item">
+                        <span class="label">OpenAI API:</span>
+                        <span class="value {{ 'success' if config['openai_api_key'] else 'warning' }}">
+                            {{ '✓ Configured' if config['openai_api_key'] else '⚠ Not configured (will use fallback)' }}
+                        </span>
+                    </div>
+                    <div class="status-item">
+                        <span class="label">Email Address:</span>
+                        <span class="value">{{ config['email_address'] or 'Not set' }}</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="label">Digest Recipient:</span>
+                        <span class="value">{{ config['digest_recipient'] or config['email_address'] or 'Not set' }}</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="label">Daily Schedule:</span>
+                        <span class="value">{{ '%02d:%02d' % (config['digest_hour'], config['digest_minute']) }}</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="label">Scheduler Status:</span>
+                        <span class="value {{ 'success' if scheduler_running else 'error' }}">
+                            {{ '✓ Running' if scheduler_running else '✗ Stopped' }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Last Run Status -->
+            <div class="card">
+                <h2>📊 Last Run Status</h2>
+                <div class="status-grid">
+                    <div class="status-item">
+                        <span class="label">Last Run:</span>
+                        <span class="value">
+                            {% if last_run['timestamp'] %}
+                                {{ last_run['timestamp'] }}
+                            {% else %}
+                                Never
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="status-item">
+                        <span class="label">Status:</span>
+                        <span class="value status-{{ last_run['status'].lower().replace(' ', '-') }}">
+                            {{ last_run['status'] }}
+                        </span>
+                    </div>
+                    <div class="status-item">
+                        <span class="label">Newsletters Found:</span>
+                        <span class="value">{{ last_run['newsletter_count'] }}</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="label">Unique Articles:</span>
+                        <span class="value">{{ last_run['article_count'] }}</span>
+                    </div>
+                    {% if last_run['error'] %}
+                    <div class="status-item full-width">
+                        <span class="label">Error:</span>
+                        <span class="value error">{{ last_run['error'] }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card">
+                <h2>🎯 Actions</h2>
+                <div class="actions">
+                    <button id="testConnection" class="btn btn-secondary">
+                        Test Email Connection
+                    </button>
+                    <button id="triggerNow" class="btn btn-primary">
+                        Generate Digest Now
+                    </button>
+                    <button id="triggerWeek" class="btn btn-secondary">
+                        Generate Digest (Last 7 Days)
+                    </button>
+                    <button id="refreshStatus" class="btn btn-secondary">
+                        Refresh Status
+                    </button>
+                </div>
+                <div id="actionStatus" class="action-status"></div>
+            </div>
+
+            <!-- Setup Instructions -->
+            <div class="card">
+                <h2>📋 Setup Instructions</h2>
+                <div class="instructions">
+                    <ol>
+                        <li>
+                            <strong>Create a Yahoo App Password</strong>
+                            <ul>
+                                <li>Go to Yahoo Account Security settings</li>
+                                <li>Generate an app password for "Other App"</li>
+                                <li>Save this password for configuration</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <strong>Configure Environment Variables</strong>
+                            <ul>
+                                <li>Copy <code>.env.example</code> to <code>.env</code></li>
+                                <li>Fill in your Yahoo email and app password</li>
+                                <li>Optionally add OpenAI API key for better summaries</li>
+                                <li>Set your preferred digest schedule</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <strong>Optional: Specify Newsletter Senders</strong>
+                            <ul>
+                                <li>Add specific newsletter sender emails to filter</li>
+                                <li>Leave empty to auto-detect newsletters</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <strong>Test & Deploy</strong>
+                            <ul>
+                                <li>Test your email connection using the button above</li>
+                                <li>Trigger a manual digest to verify setup</li>
+                                <li>Deploy to Railway, Render, or PythonAnywhere</li>
+                            </ul>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
