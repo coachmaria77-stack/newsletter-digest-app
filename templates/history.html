@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Article History - Newsletter Digest App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .history-item {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .history-item h3 {
+            margin: 0 0 8px 0;
+            color: #2c5282;
+        }
+        .history-item a {
+            color: #2c5282;
+            text-decoration: none;
+        }
+        .history-item a:hover {
+            text-decoration: underline;
+        }
+        .meta {
+            font-size: 14px;
+            color: #666;
+            margin-top: 8px;
+        }
+        .vote-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+        .vote-up {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        .vote-down {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+        .vote-none {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+        .read-badge {
+            background: #bee3f8;
+            color: #2c5282;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #2c5282;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 Article History</h1>
+            <p class="subtitle">Your article interactions and reading history</p>
+        </header>
+
+        <a href="/" class="back-link">← Back to Dashboard</a>
+
+        {% if error %}
+        <div class="card">
+            <p style="color: #e53e3e;">{{ error }}</p>
+        </div>
+        {% elif not interactions %}
+        <div class="card">
+            <p>No article interactions yet. Start reading and voting on articles in your digest!</p>
+        </div>
+        {% else %}
+        <div class="card">
+            <h2>All Interactions ({{ interactions|length }})</h2>
+            
+            {% for item in interactions %}
+            <div class="history-item">
+                <h3>
+                    <a href="{{ item.article_url }}" target="_blank">
+                        {{ item.article_title }}
+                    </a>
+                </h3>
+                
+                <div class="meta">
+                    <span>
+                        {% if item.vote == 1 %}
+                        <span class="vote-badge vote-up">👍 Upvoted</span>
+                        {% elif item.vote == -1 %}
+                        <span class="vote-badge vote-down">👎 Downvoted</span>
+                        {% else %}
+                        <span class="vote-badge vote-none">No vote</span>
+                        {% endif %}
+                    </span>
+                    
+                    {% if item.is_read %}
+                    <span class="read-badge">✓ Read</span>
+                    {% endif %}
+                    
+                    <br>
+                    
+                    <span style="margin-top: 8px; display: inline-block;">
+                        Source: {{ item.article_source or 'Unknown' }} | 
+                        Added: {{ item.created_at[:10] }}
+                    </span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
