@@ -81,4 +81,15 @@ document.getElementById('triggerNow').addEventListener('click', async () => {
 });
 
 // Trigger digest for last week
-document.
+document.getElementById('triggerWeek').addEventListener('click', async () => {
+    if (!confirm('Generate and send digest for the last 7 days? This may take longer.')) {
+        return;
+    }
+
+    disableButtons(true);
+    showStatus('Generating digest for last 7 days... This may take several minutes.', 'info');
+
+    try {
+        const response = await fetch('/api/trigger', {
+            method: 'POST',
+            headers: {
