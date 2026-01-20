@@ -546,3 +546,4 @@ if __name__ == '__main__':
 
     logger.info(f"Starting Newsletter Digest App on port {port}")
     app.run(host='0.0.0.0', port=port, debug=debug)
+
