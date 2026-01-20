@@ -24,7 +24,7 @@ function disableButtons(disabled = true) {
     });
 }
 
-// Wait for DOM to be fully loaded
+// Wait for DOM to be fully loaded before attaching event listeners
 window.addEventListener('DOMContentLoaded', () => {
     // Test email connection
     document.getElementById('testConnection').addEventListener('click', async () => {
@@ -75,7 +75,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
             if (data.success) {
                 showStatus('✓ Digest generation started! Check your email in a few minutes.', 'success');
-                disableButtons(false);
             } else {
                 showStatus('✗ ' + data.message, 'error');
             }
@@ -108,7 +107,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
             if (data.success) {
                 showStatus('✓ Digest generation started! Check your email in a few minutes.', 'success');
-                disableButtons(false);
             } else {
                 showStatus('✗ ' + data.message, 'error');
             }
@@ -156,19 +154,22 @@ window.addEventListener('DOMContentLoaded', () => {
     // Load digest button
     document.getElementById('loadDigest').addEventListener('click', loadDigest);
 
-    // Auto-load digest when page loads
+    // Auto-load digest when page loads (with delay to ensure DOM is ready)
     setTimeout(() => loadDigest(), 100);
 
-    // Auto-refresh status every 30 seconds
+    // Auto-refresh status every 30 seconds (but don't reload if digest is visible)
     setInterval(async () => {
         try {
             const response = await fetch('/api/status');
             const data = await response.json();
 
+            // Update last run info if changed
             if (data.last_run && data.last_run.timestamp) {
                 const currentTimestamp = document.querySelector('.status-item .value')?.textContent;
 
+                // Only reload if timestamp changed AND we're not viewing a digest
                 if (currentTimestamp !== data.last_run.timestamp) {
+                    // Auto-refresh the digest iframe instead of reloading the whole page
                     loadDigest();
                 }
             }
