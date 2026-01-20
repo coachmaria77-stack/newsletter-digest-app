@@ -175,10 +175,10 @@ class DigestGenerator:
                 # Extract just the source name from email
                 if '<' in source:
                     source = source.split('<')[0].strip()
-                
+
                 # Escape single quotes in title for JavaScript
                 safe_title = article['title'].replace("'", "\\'").replace('"', '\\"')
-                
+
                 html += f"""
             <div class="article">
                 <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
@@ -186,17 +186,21 @@ class DigestGenerator:
                         <a href="{article['url']}" target="_blank">{article['title']}</a>
                     </div>
                     <div style="display: flex; gap: 8px; margin-left: 16px;">
-                        <button onclick="voteArticle('{article['url']}', '{safe_title}', '{source}', 1)" 
+                        <button onclick="voteArticle('{article['url']}', '{safe_title}', '{source}', 1)"
                                 style="background: #48bb78; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px;">
                             👍
                         </button>
-                        <button onclick="voteArticle('{article['url']}', '{safe_title}', '{source}', -1)" 
+                        <button onclick="voteArticle('{article['url']}', '{safe_title}', '{source}', -1)"
                                 style="background: #f56565; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px;">
                             👎
                         </button>
-                        <button onclick="markAsRead('{article['url']}', '{safe_title}', '{source}')" 
+                        <button onclick="markAsRead('{article['url']}', '{safe_title}', '{source}')"
                                 style="background: #4299e1; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px;">
                             ✓ Read
+                        </button>
+                        <button onclick="markAsJunk('{article['url']}', '{safe_title}')"
+                                style="background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px;">
+                            🗑️ Junk
                         </button>
                     </div>
                 </div>
@@ -221,7 +225,7 @@ class DigestGenerator:
             </p>
         </div>
     </div>
-    
+
     <script>
         function voteArticle(url, title, source, vote) {{
             fetch('/api/vote', {{
@@ -244,7 +248,7 @@ class DigestGenerator:
             }})
             .catch(error => alert('Error: ' + error));
         }}
-        
+
         function markAsRead(url, title, source) {{
             fetch('/api/mark-read', {{
                 method: 'POST',
@@ -264,6 +268,52 @@ class DigestGenerator:
                 }}
             }})
             .catch(error => alert('Error: ' + error));
+        }}
+
+        function markAsJunk(url, title) {{
+            if (!confirm('Mark this article as junk? Future articles with similar titles will be filtered out.')) {{
+                return;
+            }}
+
+            const button = event.target;
+            const originalText = button.textContent;
+            button.disabled = true;
+            button.textContent = 'Processing...';
+
+            fetch('/api/mark-junk', {{
+                method: 'POST',
+                headers: {{ 'Content-Type': 'application/json' }},
+                body: JSON.stringify({{
+                    url: url,
+                    title: title
+                }})
+            }})
+            .then(response => response.json())
+            .then(data => {{
+                if (data.success) {{
+                    button.textContent = '✓ Junked';
+                    button.style.backgroundColor = '#28a745';
+
+                    // Hide the article after a short delay
+                    setTimeout(() => {{
+                        const article = button.closest('.article');
+                        article.style.opacity = '0';
+                        article.style.transition = 'opacity 0.3s';
+                        setTimeout(() => article.style.display = 'none', 300);
+                    }}, 1000);
+
+                    alert('✓ Added junk filter: "' + data.pattern + '"\\n\\nFuture articles matching this pattern will be filtered out.');
+                }} else {{
+                    button.disabled = false;
+                    button.textContent = originalText;
+                    alert('Failed to mark as junk: ' + data.message);
+                }}
+            }})
+            .catch(error => {{
+                button.disabled = false;
+                button.textContent = originalText;
+                alert('Error: ' + error);
+            }});
         }}
     </script>
 </body>
@@ -325,5 +375,13 @@ class DigestGenerator:
         subject = f"Your Daily News Digest - {current_date}"
 
         html_content = self.generate_html_digest(categorized_articles, digest_summary)
+
+        # Save digest to file for web viewing
+        try:
+            with open('digest.html', 'w', encoding='utf-8') as f:
+                f.write(html_content)
+            logger.info("Digest saved to digest.html")
+        except Exception as e:
+            logger.error(f"Failed to save digest to file: {e}")
 
         return self.send_digest(recipient, subject, html_content)
