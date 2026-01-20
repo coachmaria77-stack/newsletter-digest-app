@@ -1,4 +1,4 @@
-/ Newsletter Digest App - Frontend JavaScript
+// Newsletter Digest App - Frontend JavaScript
 
 function showStatus(message, type) {
     if (!type) type = "info";
