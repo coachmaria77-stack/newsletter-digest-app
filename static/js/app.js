@@ -115,7 +115,28 @@ window.addEventListener("DOMContentLoaded", function() {
     });
 
     document.getElementById("refreshStatus").addEventListener("click", function() {
-        location.reload();
+        showStatus("Refreshing status...", "info");
+        fetch("/api/status")
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.last_run) {
+                    // Update Last Run Status section
+                    var statusCard = document.querySelectorAll(".card")[2]; // Last Run Status is 3rd card
+                    var items = statusCard.querySelectorAll(".status-item .value");
+
+                    if (items[0]) items[0].textContent = data.last_run.timestamp || "Never";
+                    if (items[1]) {
+                        items[1].textContent = data.last_run.status;
+                        items[1].className = "value status-" + data.last_run.status.toLowerCase().replace(/ /g, "-");
+                    }
+                    if (items[2]) items[2].textContent = data.last_run.newsletter_count || 0;
+                    if (items[3]) items[3].textContent = data.last_run.article_count || 0;
+                }
+                showStatus("Status refreshed!", "success");
+            })
+            .catch(function(error) {
+                showStatus("Error: " + error.message, "error");
+            });
     });
 
     function loadDigest() {
