@@ -179,6 +179,18 @@ class SupabaseDB:
             logger.error(f"Failed to get junk filters: {e}")
             return []
 
+    def get_junk_filters_with_type(self) -> List[Dict]:
+        """Get list of all junk filters with their type."""
+        try:
+            result = self.client.table('junk_filters').select('pattern,pattern_type').execute()
+
+            logger.info(f"Retrieved {len(result.data)} junk filters with type")
+            return result.data
+
+        except Exception as e:
+            logger.error(f"Failed to get junk filters with type: {e}")
+            return []
+
     def add_newsletter_sender(self, email: str, name: str = None) -> bool:
         """Add a newsletter sender to track."""
         try:

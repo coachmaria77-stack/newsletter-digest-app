@@ -175,14 +175,38 @@ def process_and_send_digest(days_back=1):
         # Step 3.5: Filter out junk articles
         logger.info("Filtering junk articles...")
         if db:
-            junk_patterns = db.get_junk_filters()
+            junk_filters = db.get_junk_filters_with_type()
 
-            if junk_patterns:
-                logger.info(f"Found {len(junk_patterns)} junk filter patterns")
+            if junk_filters:
+                logger.info(f"Found {len(junk_filters)} junk filters")
                 filtered_articles = []
+                from urllib.parse import urlparse
+
                 for article in unique_articles:
                     title_lower = article.get('title', '').lower()
-                    is_junk = any(pattern in title_lower for pattern in junk_patterns)
+                    article_url = article.get('url', '')
+
+                    # Extract domain from article URL
+                    parsed = urlparse(article_url)
+                    article_domain = parsed.netloc.lower()
+                    if article_domain.startswith('www.'):
+                        article_domain = article_domain[4:]
+
+                    is_junk = False
+                    for jf in junk_filters:
+                        pattern = jf['pattern']
+                        pattern_type = jf.get('pattern_type', 'title')
+
+                        if pattern_type == 'domain':
+                            # Check if article URL matches blocked domain
+                            if pattern in article_domain:
+                                is_junk = True
+                                break
+                        else:
+                            # Check if pattern is in title
+                            if pattern in title_lower:
+                                is_junk = True
+                                break
 
                     if not is_junk:
                         filtered_articles.append(article)
@@ -377,16 +401,16 @@ def api_mark_read():
 
 @app.route('/api/mark-junk', methods=['POST'])
 def api_mark_junk():
-    """Mark an article as junk and add pattern to filter list."""
+    """Mark an article as junk and add domain to filter list."""
     try:
         data = request.json
         article_url = data.get('url')
         article_title = data.get('title', '')
 
-        if not article_title:
+        if not article_url:
             return jsonify({
                 'success': False,
-                'message': 'Article title is required'
+                'message': 'Article URL is required'
             }), 400
 
         # Initialize Supabase DB
@@ -397,36 +421,34 @@ def api_mark_junk():
                 'message': 'Supabase not configured'
             }), 500
 
-        # Extract key terms from title (remove common words, keep significant ones)
-        stop_words = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'from', 'up', 'about', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'between', 'under', 'again', 'further', 'then', 'once'}
+        # Extract domain from URL
+        from urllib.parse import urlparse
+        parsed = urlparse(article_url)
+        domain = parsed.netloc.lower()
 
-        # Clean and split title
-        words = article_title.lower().split()
-        # Keep words that are longer than 3 chars and not stop words
-        significant_words = [w for w in words if len(w) > 3 and w not in stop_words]
+        # Remove www. prefix if present
+        if domain.startswith('www.'):
+            domain = domain[4:]
 
-        # Take first 2-3 significant words as the pattern
-        if len(significant_words) >= 2:
-            pattern = ' '.join(significant_words[:2])
-        elif len(significant_words) == 1:
-            pattern = significant_words[0]
-        else:
-            # Fallback to first few words of title
-            pattern = ' '.join(words[:2])
+        if not domain:
+            return jsonify({
+                'success': False,
+                'message': 'Could not extract domain from URL'
+            }), 400
 
-        # Add to junk filters
+        # Add domain to junk filters
         success = db.add_junk_filter(
-            pattern=pattern,
+            pattern=domain,
             article_url=article_url,
             article_title=article_title,
-            pattern_type='title'
+            pattern_type='domain'
         )
 
         if success:
             return jsonify({
                 'success': True,
-                'message': f'Added junk filter: "{pattern}"',
-                'pattern': pattern
+                'message': f'Blocked domain: {domain}',
+                'pattern': domain
             })
         else:
             return jsonify({

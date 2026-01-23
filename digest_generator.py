@@ -227,8 +227,11 @@ class DigestGenerator:
     </div>
 
     <script>
+        // Get the base URL from parent window or current location
+        const baseUrl = window.parent !== window ? window.parent.location.origin : window.location.origin;
+
         function voteArticle(url, title, source, vote) {{
-            fetch('/api/vote', {{
+            fetch(baseUrl + '/api/vote', {{
                 method: 'POST',
                 headers: {{ 'Content-Type': 'application/json' }},
                 body: JSON.stringify({{
@@ -250,7 +253,7 @@ class DigestGenerator:
         }}
 
         function markAsRead(url, title, source) {{
-            fetch('/api/mark-read', {{
+            fetch(baseUrl + '/api/mark-read', {{
                 method: 'POST',
                 headers: {{ 'Content-Type': 'application/json' }},
                 body: JSON.stringify({{
@@ -271,7 +274,7 @@ class DigestGenerator:
         }}
 
         function markAsJunk(url, title) {{
-            if (!confirm('Mark this article as junk? Future articles with similar titles will be filtered out.')) {{
+            if (!confirm('Mark this article as junk? Future articles from this domain will be filtered out.')) {{
                 return;
             }}
 
@@ -280,7 +283,7 @@ class DigestGenerator:
             button.disabled = true;
             button.textContent = 'Processing...';
 
-            fetch('/api/mark-junk', {{
+            fetch(baseUrl + '/api/mark-junk', {{
                 method: 'POST',
                 headers: {{ 'Content-Type': 'application/json' }},
                 body: JSON.stringify({{
@@ -302,7 +305,7 @@ class DigestGenerator:
                         setTimeout(() => article.style.display = 'none', 300);
                     }}, 1000);
 
-                    alert('✓ Added junk filter: "' + data.pattern + '"\\n\\nFuture articles matching this pattern will be filtered out.');
+                    alert('✓ Blocked domain: ' + data.pattern + '\\n\\nFuture articles from this domain will be filtered out.');
                 }} else {{
                     button.disabled = false;
                     button.textContent = originalText;
