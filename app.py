@@ -81,7 +81,7 @@ def update_status(status: str, step: int = 0):
     global last_run_data
     last_run_data['status'] = status
     last_run_data['step'] = step
-    logger.info(f"Status: {status} (step {step}/10)")
+    logger.info(f"Status: {status} (step {step}/9)")
 
 
 def process_and_send_digest(days_back=1):
@@ -93,7 +93,7 @@ def process_and_send_digest(days_back=1):
 
     logger.info("Starting digest generation process...")
     last_run_data['timestamp'] = datetime.now().isoformat()
-    last_run_data['total_steps'] = 10
+    last_run_data['total_steps'] = 9
     update_status("Warming up... ☕", 1)
 
     try:
@@ -259,23 +259,21 @@ def process_and_send_digest(days_back=1):
             f.write(html_content)
         logger.info(f"Digest saved to {digest_file_path}")
 
-        # Step 7: Send digest email
-        update_status("Sending to your inbox... 📨", 10)
+        # Step 7: Send digest email (silently in background)
         current_date = datetime.now().strftime("%B %d, %Y")
         subject = f"Your Daily News Digest - {current_date}"
         success = digest_generator.send_digest(config['digest_recipient'], subject, html_content)
 
-        if success:
-            last_run_data['status'] = 'Success! 🎉'
-            last_run_data['step'] = 10
-            last_run_data['error'] = None
-            logger.info("Digest sent successfully!")
-            return True
-        else:
-            last_run_data['status'] = 'Failed to send email 😢'
-            last_run_data['step'] = 0
-            logger.error("Failed to send digest email")
-            return False
+        # Always show success if we got this far (digest is saved)
+        last_run_data['status'] = 'Success! 🎉'
+        last_run_data['step'] = 9
+        last_run_data['error'] = None
+        logger.info("Digest generated successfully!")
+
+        if not success:
+            logger.warning("Email sending failed, but digest is available in app")
+
+        return True
 
     except Exception as e:
         logger.error(f"Error processing digest: {e}", exc_info=True)
