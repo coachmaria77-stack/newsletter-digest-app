@@ -65,9 +65,6 @@ def get_supabase_db():
         supabase_url = os.getenv('SUPABASE_URL')
         supabase_key = os.getenv('SUPABASE_KEY')
 
-        logger.info(f"SUPABASE_URL set: {bool(supabase_url)}, length: {len(supabase_url) if supabase_url else 0}")
-        logger.info(f"SUPABASE_KEY set: {bool(supabase_key)}, length: {len(supabase_key) if supabase_key else 0}")
-
         if not supabase_url or not supabase_key:
             logger.warning("Supabase credentials not configured")
             return None
