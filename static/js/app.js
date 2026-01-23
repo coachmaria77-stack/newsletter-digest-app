@@ -115,20 +115,7 @@ window.addEventListener("DOMContentLoaded", function() {
     });
 
     document.getElementById("refreshStatus").addEventListener("click", function() {
-        showStatus("Refreshing status...", "info");
-        fetch("/api/status")
-            .then(function(response) { return response.json(); })
-            .then(function(data) {
-                // Update last run status on the page
-                var statusItems = document.querySelectorAll(".status-grid .status-item .value");
-                if (data.last_run) {
-                    // This is a simple refresh - for full update, reload the page
-                    showStatus("Status refreshed", "success");
-                }
-            })
-            .catch(function(error) {
-                showStatus("Error refreshing: " + error.message, "error");
-            });
+        location.reload();
     });
 
     function loadDigest() {
