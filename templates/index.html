@@ -53,12 +53,12 @@
             </div>
 
             <!-- Last Run Status -->
-            <div class="card">
+            <div class="card" id="lastRunCard">
                 <h2>📊 Last Run Status</h2>
-                <div class="status-grid">
+                <div class="status-grid" id="lastRunGrid">
                     <div class="status-item">
                         <span class="label">Last Run:</span>
-                        <span class="value">
+                        <span class="value" id="statusTimestamp">
                             {% if last_run['timestamp'] %}
                                 {{ last_run['timestamp'] }}
                             {% else %}
@@ -68,17 +68,17 @@
                     </div>
                     <div class="status-item">
                         <span class="label">Status:</span>
-                        <span class="value status-{{ last_run['status'].lower().replace(' ', '-') }}">
+                        <span class="value status-{{ last_run['status'].lower().replace(' ', '-') }}" id="statusText">
                             {{ last_run['status'] }}
                         </span>
                     </div>
                     <div class="status-item">
                         <span class="label">Newsletters Found:</span>
-                        <span class="value">{{ last_run['newsletter_count'] }}</span>
+                        <span class="value" id="statusNewsletterCount">{{ last_run['newsletter_count'] }}</span>
                     </div>
                     <div class="status-item">
                         <span class="label">Unique Articles:</span>
-                        <span class="value">{{ last_run['article_count'] }}</span>
+                        <span class="value" id="statusArticleCount">{{ last_run['article_count'] }}</span>
                     </div>
                     {% if last_run['error'] %}
                     <div class="status-item full-width">

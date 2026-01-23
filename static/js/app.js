@@ -120,17 +120,19 @@ window.addEventListener("DOMContentLoaded", function() {
             .then(function(response) { return response.json(); })
             .then(function(data) {
                 if (data.last_run) {
-                    // Update Last Run Status section
-                    var statusCard = document.querySelectorAll(".card")[2]; // Last Run Status is 3rd card
-                    var items = statusCard.querySelectorAll(".status-item .value");
+                    // Update Last Run Status section by ID
+                    var timestamp = document.getElementById("statusTimestamp");
+                    var status = document.getElementById("statusText");
+                    var nlCount = document.getElementById("statusNewsletterCount");
+                    var artCount = document.getElementById("statusArticleCount");
 
-                    if (items[0]) items[0].textContent = data.last_run.timestamp || "Never";
-                    if (items[1]) {
-                        items[1].textContent = data.last_run.status;
-                        items[1].className = "value status-" + data.last_run.status.toLowerCase().replace(/ /g, "-");
+                    if (timestamp) timestamp.textContent = data.last_run.timestamp || "Never";
+                    if (status) {
+                        status.textContent = data.last_run.status;
+                        status.className = "value status-" + data.last_run.status.toLowerCase().replace(/ /g, "-");
                     }
-                    if (items[2]) items[2].textContent = data.last_run.newsletter_count || 0;
-                    if (items[3]) items[3].textContent = data.last_run.article_count || 0;
+                    if (nlCount) nlCount.textContent = data.last_run.newsletter_count || 0;
+                    if (artCount) artCount.textContent = data.last_run.article_count || 0;
                 }
                 showStatus("Status refreshed!", "success");
             })
