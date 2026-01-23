@@ -292,7 +292,13 @@ def view_digest():
             html_content = f.read()
         return html_content
     except FileNotFoundError:
-        return "<h1>No digest available yet</h1><p>Generate a digest first, then come back to view it.</p><p><a href='/'>Go back to dashboard</a></p>"
+        return """
+        <div style="text-align: center; padding: 40px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+            <img src="https://placekitten.com/300/200" alt="Cute kitten" style="border-radius: 12px; margin-bottom: 20px;">
+            <h2 style="color: #667eea;">No digest yet!</h2>
+            <p style="color: #666;">Click "Generate Digest Now" above to create your first digest.</p>
+        </div>
+        """
 
 @app.route('/api/vote', methods=['POST'])
 def api_vote():
