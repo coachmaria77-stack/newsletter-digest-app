@@ -144,7 +144,8 @@ def process_and_send_digest(days_back=1):
 
         if not newsletters:
             logger.warning("No newsletters found")
-            last_run_data['status'] = 'No newsletters found'
+            last_run_data['status'] = 'No newsletters found 📭'
+            last_run_data['step'] = 0
             last_run_data['newsletter_count'] = 0
             last_run_data['article_count'] = 0
             return False
@@ -168,7 +169,8 @@ def process_and_send_digest(days_back=1):
 
         if not articles:
             logger.warning("No articles extracted")
-            last_run_data['status'] = 'No articles extracted'
+            last_run_data['status'] = 'No articles extracted 📄'
+            last_run_data['step'] = 0
             last_run_data['article_count'] = 0
             return False
         logger.info(f"Extracted {len(articles)} articles")
@@ -180,7 +182,8 @@ def process_and_send_digest(days_back=1):
 
         if not unique_articles:
             logger.warning("No unique articles after deduplication")
-            last_run_data['status'] = 'No unique articles'
+            last_run_data['status'] = 'No unique articles 🔄'
+            last_run_data['step'] = 0
             last_run_data['article_count'] = 0
             return False
 
@@ -230,7 +233,8 @@ def process_and_send_digest(days_back=1):
 
         if not unique_articles:
             logger.warning("No articles after junk filtering")
-            last_run_data['status'] = 'No articles after filtering'
+            last_run_data['status'] = 'No articles after filtering 🗑️'
+            last_run_data['step'] = 0
             last_run_data['article_count'] = 0
             return False
 
@@ -275,14 +279,16 @@ def process_and_send_digest(days_back=1):
 
     except Exception as e:
         logger.error(f"Error processing digest: {e}", exc_info=True)
-        last_run_data['status'] = 'Error'
+        last_run_data['status'] = 'Error 💥'
+        last_run_data['step'] = 0
         last_run_data['error'] = str(e)
         return False
 
     finally:
         # Disconnect from email
         try:
-            email_processor.disconnect()
+            if 'email_processor' in dir():
+                email_processor.disconnect()
         except:
             pass
 
