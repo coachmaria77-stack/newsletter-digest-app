@@ -114,9 +114,21 @@ def process_and_send_digest(days_back=1):
 
         # Step 1: Fetch newsletters
         logger.info("Fetching newsletters...")
+
+        # Get senders from both env var and database
+        all_senders = list(config['newsletter_senders']) if config['newsletter_senders'] else []
+        db = get_supabase_db()
+        if db:
+            db_senders = db.get_newsletter_senders()
+            for sender in db_senders:
+                if sender['email'] not in all_senders:
+                    all_senders.append(sender['email'])
+
+        logger.info(f"Using {len(all_senders)} newsletter senders")
+
         newsletters = email_processor.fetch_newsletters(
             days_back=days_back,
-            specific_senders=config['newsletter_senders']
+            specific_senders=all_senders if all_senders else None
         )
 
         if not newsletters:
@@ -444,6 +456,113 @@ def history():
     return render_template('history.html',
                          interactions=interactions,
                          error=None)
+
+@app.route('/api/newsletters', methods=['GET'])
+def api_get_newsletters():
+    """Get list of newsletter senders."""
+    try:
+        db = get_supabase_db()
+        if not db:
+            return jsonify({
+                'success': False,
+                'message': 'Supabase not configured',
+                'newsletters': []
+            }), 500
+
+        newsletters = db.get_newsletter_senders()
+        return jsonify({
+            'success': True,
+            'newsletters': newsletters
+        })
+
+    except Exception as e:
+        logger.error(f"Error getting newsletters: {e}")
+        return jsonify({
+            'success': False,
+            'message': str(e),
+            'newsletters': []
+        }), 500
+
+@app.route('/api/newsletters', methods=['POST'])
+def api_add_newsletter():
+    """Add a newsletter sender."""
+    try:
+        data = request.json
+        email = data.get('email', '').strip()
+        name = data.get('name', '').strip()
+
+        if not email:
+            return jsonify({
+                'success': False,
+                'message': 'Email is required'
+            }), 400
+
+        db = get_supabase_db()
+        if not db:
+            return jsonify({
+                'success': False,
+                'message': 'Supabase not configured'
+            }), 500
+
+        success = db.add_newsletter_sender(email, name if name else None)
+
+        if success:
+            return jsonify({
+                'success': True,
+                'message': f'Added newsletter: {email}'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Failed to add newsletter'
+            }), 500
+
+    except Exception as e:
+        logger.error(f"Error adding newsletter: {e}")
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@app.route('/api/newsletters', methods=['DELETE'])
+def api_remove_newsletter():
+    """Remove a newsletter sender."""
+    try:
+        data = request.json
+        email = data.get('email', '').strip()
+
+        if not email:
+            return jsonify({
+                'success': False,
+                'message': 'Email is required'
+            }), 400
+
+        db = get_supabase_db()
+        if not db:
+            return jsonify({
+                'success': False,
+                'message': 'Supabase not configured'
+            }), 500
+
+        success = db.remove_newsletter_sender(email)
+
+        if success:
+            return jsonify({
+                'success': True,
+                'message': f'Removed newsletter: {email}'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Failed to remove newsletter'
+            }), 500
+
+    except Exception as e:
+        logger.error(f"Error removing newsletter: {e}")
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
 
 @app.route('/api/status')
 def api_status():

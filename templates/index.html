@@ -111,10 +111,25 @@
                           View History                                                                        
                       </button>                                                                               
                   </div>                                                                                      
-                  <div id="actionStatus" class="action-status"></div>                                         
-              </div>                                                                                          
-                                                                                                              
-              <!-- View Digest -->                                                                            
+                  <div id="actionStatus" class="action-status"></div>
+            </div>
+
+            <!-- Newsletter Management -->
+            <div class="card">
+                <h2>📧 Newsletter Senders</h2>
+                <div class="newsletter-section">
+                    <div class="add-newsletter-form">
+                        <input type="email" id="newsletterEmail" placeholder="sender@newsletter.com" class="input-field">
+                        <input type="text" id="newsletterName" placeholder="Newsletter name (optional)" class="input-field">
+                        <button id="addNewsletter" class="btn btn-primary">Add Newsletter</button>
+                    </div>
+                    <div id="newsletterList" class="newsletter-list">
+                        <p>Loading newsletters...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View Digest -->                                                                            
               <div class="card">                                                                              
                   <h2>📰 Your Latest Digest</h2>                                                              
                   <div class="instructions">                                                                  

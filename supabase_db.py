@@ -170,11 +170,57 @@ class SupabaseDB:
         """Get list of all junk filter patterns."""
         try:
             result = self.client.table('junk_filters').select('pattern').execute()
-            
+
             patterns = [row['pattern'] for row in result.data]
             logger.info(f"Retrieved {len(patterns)} junk filters")
             return patterns
-            
+
         except Exception as e:
             logger.error(f"Failed to get junk filters: {e}")
+            return []
+
+    def add_newsletter_sender(self, email: str, name: str = None) -> bool:
+        """Add a newsletter sender to track."""
+        try:
+            data = {
+                'email': email.lower().strip(),
+                'name': name or email.split('@')[0]
+            }
+
+            result = self.client.table('newsletter_senders').upsert(
+                data,
+                on_conflict='email'
+            ).execute()
+
+            logger.info(f"Added newsletter sender: {email}")
+            return True
+
+        except Exception as e:
+            logger.error(f"Failed to add newsletter sender: {e}")
+            return False
+
+    def remove_newsletter_sender(self, email: str) -> bool:
+        """Remove a newsletter sender."""
+        try:
+            result = self.client.table('newsletter_senders').delete().eq(
+                'email', email.lower().strip()
+            ).execute()
+
+            logger.info(f"Removed newsletter sender: {email}")
+            return True
+
+        except Exception as e:
+            logger.error(f"Failed to remove newsletter sender: {e}")
+            return False
+
+    def get_newsletter_senders(self) -> List[Dict]:
+        """Get list of all newsletter senders."""
+        try:
+            result = self.client.table('newsletter_senders').select('*').order('created_at', desc=True).execute()
+
+            logger.info(f"Retrieved {len(result.data)} newsletter senders")
+            return result.data
+
+        except Exception as e:
+            logger.error(f"Failed to get newsletter senders: {e}")
             return []

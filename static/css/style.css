@@ -224,6 +224,86 @@ header h1 {
     color: #667eea;
 }
 
+.newsletter-section {
+    margin-top: 10px;
+}
+
+.add-newsletter-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.input-field {
+    padding: 12px 16px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1em;
+    flex: 1;
+    min-width: 200px;
+}
+
+.input-field:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.newsletter-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.newsletter-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.newsletter-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.newsletter-name {
+    font-weight: 600;
+    color: #333;
+}
+
+.newsletter-email {
+    font-size: 0.9em;
+    color: #666;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+    padding: 8px 16px;
+    min-width: auto;
+    flex: none;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+}
+
+.btn-small {
+    padding: 8px 16px;
+    min-width: auto;
+    flex: none;
+}
+
+.empty-message {
+    text-align: center;
+    color: #666;
+    padding: 20px;
+}
+
 @media (max-width: 768px) {
     header h1 {
         font-size: 2em;
