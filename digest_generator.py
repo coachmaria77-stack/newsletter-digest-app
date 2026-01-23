@@ -4,6 +4,7 @@ from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 from typing import List, Dict
 import logging
+import html as html_lib
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -176,29 +177,31 @@ class DigestGenerator:
                 if '<' in source:
                     source = source.split('<')[0].strip()
 
-                # Escape single quotes in title for JavaScript
-                safe_title = article['title'].replace("'", "\\'").replace('"', '\\"')
+                # HTML escape for data attributes
+                safe_url = html_lib.escape(article['url'])
+                safe_title = html_lib.escape(article['title'])
+                safe_source = html_lib.escape(source)
 
                 html += f"""
-            <div class="article">
+            <div class="article" data-url="{safe_url}" data-title="{safe_title}" data-source="{safe_source}">
                 <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
                     <div class="article-title" style="flex: 1;">
                         <a href="{article['url']}" target="_blank">{article['title']}</a>
                     </div>
                     <div style="display: flex; gap: 8px; margin-left: 16px;">
-                        <button onclick="voteArticle('{article['url']}', '{safe_title}', '{source}', 1)"
+                        <button class="vote-btn" data-vote="1"
                                 style="background: #48bb78; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px;">
                             👍
                         </button>
-                        <button onclick="voteArticle('{article['url']}', '{safe_title}', '{source}', -1)"
+                        <button class="vote-btn" data-vote="-1"
                                 style="background: #f56565; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px;">
                             👎
                         </button>
-                        <button onclick="markAsRead('{article['url']}', '{safe_title}', '{source}')"
+                        <button class="read-btn"
                                 style="background: #4299e1; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px;">
                             ✓ Read
                         </button>
-                        <button onclick="markAsJunk('{article['url']}', '{safe_title}')"
+                        <button class="junk-btn"
                                 style="background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px;">
                             🗑️ Junk
                         </button>
@@ -230,94 +233,119 @@ class DigestGenerator:
         // Get the base URL from parent window or current location
         const baseUrl = window.parent !== window ? window.parent.location.origin : window.location.origin;
 
-        function voteArticle(url, title, source, vote) {{
-            fetch(baseUrl + '/api/vote', {{
-                method: 'POST',
-                headers: {{ 'Content-Type': 'application/json' }},
-                body: JSON.stringify({{
-                    article_url: url,
-                    article_title: title,
-                    article_source: source,
-                    vote: vote
-                }})
-            }})
-            .then(response => response.json())
-            .then(data => {{
-                if (data.success) {{
-                    alert(vote === 1 ? '👍 Upvoted!' : '👎 Downvoted!');
-                }} else {{
-                    alert('Error: ' + data.message);
-                }}
-            }})
-            .catch(error => alert('Error: ' + error));
+        // Get article data from parent element
+        function getArticleData(button) {{
+            const article = button.closest('.article');
+            return {{
+                url: article.dataset.url,
+                title: article.dataset.title,
+                source: article.dataset.source
+            }};
         }}
 
-        function markAsRead(url, title, source) {{
-            fetch(baseUrl + '/api/mark-read', {{
-                method: 'POST',
-                headers: {{ 'Content-Type': 'application/json' }},
-                body: JSON.stringify({{
-                    article_url: url,
-                    article_title: title,
-                    article_source: source
+        // Vote buttons
+        document.querySelectorAll('.vote-btn').forEach(btn => {{
+            btn.addEventListener('click', function() {{
+                const data = getArticleData(this);
+                const vote = parseInt(this.dataset.vote);
+
+                fetch(baseUrl + '/api/vote', {{
+                    method: 'POST',
+                    headers: {{ 'Content-Type': 'application/json' }},
+                    body: JSON.stringify({{
+                        article_url: data.url,
+                        article_title: data.title,
+                        article_source: data.source,
+                        vote: vote
+                    }})
                 }})
-            }})
-            .then(response => response.json())
-            .then(data => {{
-                if (data.success) {{
-                    alert('✓ Marked as read!');
-                }} else {{
-                    alert('Error: ' + data.message);
+                .then(response => response.json())
+                .then(result => {{
+                    if (result.success) {{
+                        alert(vote === 1 ? '👍 Upvoted!' : '👎 Downvoted!');
+                    }} else {{
+                        alert('Error: ' + result.message);
+                    }}
+                }})
+                .catch(error => alert('Error: ' + error));
+            }});
+        }});
+
+        // Read buttons
+        document.querySelectorAll('.read-btn').forEach(btn => {{
+            btn.addEventListener('click', function() {{
+                const data = getArticleData(this);
+
+                fetch(baseUrl + '/api/mark-read', {{
+                    method: 'POST',
+                    headers: {{ 'Content-Type': 'application/json' }},
+                    body: JSON.stringify({{
+                        article_url: data.url,
+                        article_title: data.title,
+                        article_source: data.source
+                    }})
+                }})
+                .then(response => response.json())
+                .then(result => {{
+                    if (result.success) {{
+                        alert('✓ Marked as read!');
+                    }} else {{
+                        alert('Error: ' + result.message);
+                    }}
+                }})
+                .catch(error => alert('Error: ' + error));
+            }});
+        }});
+
+        // Junk buttons
+        document.querySelectorAll('.junk-btn').forEach(btn => {{
+            btn.addEventListener('click', function() {{
+                if (!confirm('Mark this article as junk? Future articles from this domain will be filtered out.')) {{
+                    return;
                 }}
-            }})
-            .catch(error => alert('Error: ' + error));
-        }}
 
-        function markAsJunk(url, title) {{
-            if (!confirm('Mark this article as junk? Future articles from this domain will be filtered out.')) {{
-                return;
-            }}
+                const data = getArticleData(this);
+                const button = this;
+                const originalText = button.textContent;
+                button.disabled = true;
+                button.textContent = 'Processing...';
 
-            const button = event.target;
-            const originalText = button.textContent;
-            button.disabled = true;
-            button.textContent = 'Processing...';
-
-            fetch(baseUrl + '/api/mark-junk', {{
-                method: 'POST',
-                headers: {{ 'Content-Type': 'application/json' }},
-                body: JSON.stringify({{
-                    url: url,
-                    title: title
+                fetch(baseUrl + '/api/mark-junk', {{
+                    method: 'POST',
+                    headers: {{ 'Content-Type': 'application/json' }},
+                    body: JSON.stringify({{
+                        url: data.url,
+                        title: data.title
+                    }})
                 }})
-            }})
-            .then(response => response.json())
-            .then(data => {{
-                if (data.success) {{
-                    button.textContent = '✓ Junked';
-                    button.style.backgroundColor = '#28a745';
+                .then(response => response.json())
+                .then(result => {{
+                    if (result.success) {{
+                        button.textContent = '✓ Junked';
+                        button.style.backgroundColor = '#28a745';
 
-                    // Hide the article after a short delay
-                    setTimeout(() => {{
-                        const article = button.closest('.article');
-                        article.style.opacity = '0';
-                        article.style.transition = 'opacity 0.3s';
-                        setTimeout(() => article.style.display = 'none', 300);
-                    }}, 1000);
+                        // Hide the article after a short delay
+                        setTimeout(() => {{
+                            const article = button.closest('.article');
+                            article.style.opacity = '0';
+                            article.style.transition = 'opacity 0.3s';
+                            setTimeout(() => article.style.display = 'none', 300);
+                        }}, 1000);
 
-                    alert('✓ Blocked domain: ' + data.pattern + '\\n\\nFuture articles from this domain will be filtered out.');
-                }} else {{
+                        alert('✓ Blocked domain: ' + result.pattern + '\\n\\nFuture articles from this domain will be filtered out.');
+                    }} else {{
+                        button.disabled = false;
+                        button.textContent = originalText;
+                        alert('Failed to mark as junk: ' + result.message);
+                    }}
+                }})
+                .catch(error => {{
                     button.disabled = false;
                     button.textContent = originalText;
-                    alert('Failed to mark as junk: ' + data.message);
-                }}
-            }})
-            .catch(error => {{
-                button.disabled = false;
-                button.textContent = originalText;
-                alert('Error: ' + error);
+                    alert('Error: ' + error);
+                }});
             }});
-        }}
+        }});
     </script>
 </body>
 </html>
