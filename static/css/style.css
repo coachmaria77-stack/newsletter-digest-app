@@ -8,7 +8,7 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
-    padding: 20px;
+    padding: 10px;
     color: #333;
 }
 
@@ -20,53 +20,54 @@ body {
 header {
     text-align: center;
     color: white;
-    margin-bottom: 40px;
+    margin-bottom: 15px;
 }
 
 header h1 {
-    font-size: 2.5em;
-    margin-bottom: 10px;
+    font-size: 1.8em;
+    margin-bottom: 5px;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
 }
 
 .subtitle {
-    font-size: 1.2em;
+    font-size: 1em;
     opacity: 0.9;
 }
 
 .dashboard {
     display: grid;
-    gap: 20px;
+    gap: 12px;
 }
 
 .card {
     background: white;
-    border-radius: 12px;
-    padding: 30px;
+    border-radius: 10px;
+    padding: 15px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
 .card h2 {
     color: #667eea;
-    margin-bottom: 20px;
-    font-size: 1.5em;
+    margin-bottom: 12px;
+    font-size: 1.2em;
     border-bottom: 2px solid #f0f0f0;
-    padding-bottom: 10px;
+    padding-bottom: 8px;
 }
 
 .status-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 15px;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 8px;
 }
 
 .status-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px;
+    padding: 8px 12px;
     background: #f8f9fa;
-    border-radius: 8px;
+    border-radius: 6px;
+    font-size: 0.9em;
 }
 
 .status-item.full-width {
@@ -118,20 +119,20 @@ header h1 {
 .actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 15px;
-    margin-bottom: 20px;
+    gap: 8px;
+    margin-bottom: 10px;
 }
 
 .btn {
-    padding: 12px 24px;
+    padding: 8px 16px;
     border: none;
-    border-radius: 8px;
-    font-size: 1em;
+    border-radius: 6px;
+    font-size: 0.85em;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
     flex: 1;
-    min-width: 200px;
+    min-width: 150px;
 }
 
 .btn-primary {
@@ -225,44 +226,45 @@ header h1 {
 }
 
 .newsletter-section {
-    margin-top: 10px;
+    margin-top: 5px;
 }
 
 .add-newsletter-form {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 20px;
+    gap: 8px;
+    margin-bottom: 10px;
 }
 
 .input-field {
-    padding: 12px 16px;
+    padding: 8px 12px;
     border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 1em;
+    border-radius: 6px;
+    font-size: 0.9em;
     flex: 1;
-    min-width: 200px;
+    min-width: 180px;
 }
 
 .input-field:focus {
     outline: none;
     border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
 }
 
 .newsletter-list {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 6px;
 }
 
 .newsletter-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 16px;
+    padding: 8px 12px;
     background: #f8f9fa;
-    border-radius: 8px;
+    border-radius: 6px;
+    font-size: 0.9em;
 }
 
 .newsletter-info {
