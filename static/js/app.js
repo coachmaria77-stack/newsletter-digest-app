@@ -1,5 +1,73 @@
 // Newsletter Digest App - Frontend JavaScript
 
+var pollInterval = null;
+
+function updateProgress(step, totalSteps, statusText) {
+    var container = document.getElementById("progressContainer");
+    var bar = document.getElementById("progressBar");
+    var text = document.getElementById("progressText");
+
+    if (!container || !bar || !text) return;
+
+    if (step > 0 && step < totalSteps) {
+        container.style.display = "block";
+        var percent = Math.round((step / totalSteps) * 100);
+        bar.style.width = percent + "%";
+        text.textContent = statusText + " (" + percent + "%)";
+    } else {
+        container.style.display = "none";
+    }
+}
+
+function startPolling() {
+    if (pollInterval) return;
+
+    pollInterval = setInterval(function() {
+        fetch("/api/status")
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.last_run) {
+                    var step = data.last_run.step || 0;
+                    var totalSteps = data.last_run.total_steps || 10;
+                    var status = data.last_run.status;
+
+                    // Update progress bar
+                    updateProgress(step, totalSteps, status);
+
+                    // Update status text
+                    var statusEl = document.getElementById("statusText");
+                    if (statusEl) {
+                        statusEl.textContent = status;
+                    }
+
+                    // Update counts
+                    var nlCount = document.getElementById("statusNewsletterCount");
+                    var artCount = document.getElementById("statusArticleCount");
+                    if (nlCount) nlCount.textContent = data.last_run.newsletter_count || 0;
+                    if (artCount) artCount.textContent = data.last_run.article_count || 0;
+
+                    // Stop polling when done
+                    if (status.indexOf("Success") !== -1 || status.indexOf("Error") !== -1 ||
+                        status.indexOf("Failed") !== -1 || status.indexOf("No ") === 0) {
+                        stopPolling();
+                        updateProgress(0, 10, "");
+                        showStatus("Digest complete! " + status, "success");
+                    }
+                }
+            })
+            .catch(function(error) {
+                console.error("Polling error:", error);
+            });
+    }, 2000);
+}
+
+function stopPolling() {
+    if (pollInterval) {
+        clearInterval(pollInterval);
+        pollInterval = null;
+    }
+}
+
 function showStatus(message, type) {
     if (!type) type = "info";
     var statusDiv = document.getElementById("actionStatus");
@@ -70,7 +138,8 @@ window.addEventListener("DOMContentLoaded", function() {
         .then(function(response) { return response.json(); })
         .then(function(data) {
             if (data.success) {
-                showStatus("Digest generation started! Check your email in a few minutes.", "success");
+                showStatus("Digest generation started! Watch the progress below.", "info");
+                startPolling();
             } else {
                 showStatus("Error: " + data.message, "error");
             }
@@ -101,7 +170,8 @@ window.addEventListener("DOMContentLoaded", function() {
         .then(function(response) { return response.json(); })
         .then(function(data) {
             if (data.success) {
-                showStatus("Digest generation started! Check your email in a few minutes.", "success");
+                showStatus("Digest generation started! Watch the progress below.", "info");
+                startPolling();
             } else {
                 showStatus("Error: " + data.message, "error");
             }
@@ -120,6 +190,13 @@ window.addEventListener("DOMContentLoaded", function() {
             .then(function(response) { return response.json(); })
             .then(function(data) {
                 if (data.last_run) {
+                    var step = data.last_run.step || 0;
+                    var totalSteps = data.last_run.total_steps || 10;
+                    var statusValue = data.last_run.status;
+
+                    // Update progress bar
+                    updateProgress(step, totalSteps, statusValue);
+
                     // Update Last Run Status section by ID
                     var timestamp = document.getElementById("statusTimestamp");
                     var status = document.getElementById("statusText");
@@ -128,11 +205,15 @@ window.addEventListener("DOMContentLoaded", function() {
 
                     if (timestamp) timestamp.textContent = data.last_run.timestamp || "Never";
                     if (status) {
-                        status.textContent = data.last_run.status;
-                        status.className = "value status-" + data.last_run.status.toLowerCase().replace(/ /g, "-");
+                        status.textContent = statusValue;
                     }
                     if (nlCount) nlCount.textContent = data.last_run.newsletter_count || 0;
                     if (artCount) artCount.textContent = data.last_run.article_count || 0;
+
+                    // Start polling if still running
+                    if (statusValue.indexOf("...") !== -1) {
+                        startPolling();
+                    }
                 }
                 showStatus("Status refreshed!", "success");
             })

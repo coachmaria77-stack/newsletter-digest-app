@@ -38,7 +38,9 @@ last_run_data = {
     'status': 'Not run yet',
     'article_count': 0,
     'newsletter_count': 0,
-    'error': None
+    'error': None,
+    'step': 0,
+    'total_steps': 10
 }
 
 
@@ -74,6 +76,14 @@ def get_supabase_db():
         logger.error(f"Failed to initialize Supabase: {e}")
         return None
 
+def update_status(status: str, step: int = 0):
+    """Update the current run status with step progress."""
+    global last_run_data
+    last_run_data['status'] = status
+    last_run_data['step'] = step
+    logger.info(f"Status: {status} (step {step}/10)")
+
+
 def process_and_send_digest(days_back=1):
     """
     Main function to process newsletters and send digest.
@@ -83,7 +93,8 @@ def process_and_send_digest(days_back=1):
 
     logger.info("Starting digest generation process...")
     last_run_data['timestamp'] = datetime.now().isoformat()
-    last_run_data['status'] = 'Running'
+    last_run_data['total_steps'] = 10
+    update_status("Warming up... ☕", 1)
 
     try:
         config = get_config()
@@ -113,7 +124,7 @@ def process_and_send_digest(days_back=1):
         )
 
         # Step 1: Fetch newsletters
-        logger.info("Fetching newsletters...")
+        update_status("Vibing with your inbox... 📬", 2)
 
         # Get senders from both env var and database
         all_senders = list(config['newsletter_senders']) if config['newsletter_senders'] else []
@@ -142,10 +153,11 @@ def process_and_send_digest(days_back=1):
         logger.info(f"Found {len(newsletters)} newsletters")
 
         # Step 2: Extract articles from newsletters
-        logger.info("Extracting articles...")
+        update_status(f"Extracting the good stuff... 🔍 ({len(newsletters)} newsletters)", 3)
         articles = article_processor.extract_articles_from_newsletters(newsletters)
 
         # Step 2.5: Filter out read articles
+        update_status("Filtering out old news... 📰", 4)
         db = get_supabase_db()
         if db:
             read_urls = db.get_read_article_urls()
@@ -162,7 +174,7 @@ def process_and_send_digest(days_back=1):
         logger.info(f"Extracted {len(articles)} articles")
 
         # Step 3: Deduplicate articles
-        logger.info("Deduplicating articles...")
+        update_status(f"Removing duplicates... 🧹 ({len(articles)} articles)", 5)
         unique_articles = article_processor.deduplicate_articles(articles)
         logger.info(f"After deduplication: {len(unique_articles)} unique articles")
 
@@ -173,7 +185,7 @@ def process_and_send_digest(days_back=1):
             return False
 
         # Step 3.5: Filter out junk articles
-        logger.info("Filtering junk articles...")
+        update_status("Taking out the trash... 🗑️", 6)
         if db:
             junk_filters = db.get_junk_filters_with_type()
 
@@ -225,18 +237,18 @@ def process_and_send_digest(days_back=1):
         last_run_data['article_count'] = len(unique_articles)
 
         # Step 4: Generate summaries
-        logger.info("Generating summaries...")
+        update_status(f"AI magic happening... ✨ ({len(unique_articles)} articles)", 7)
         unique_articles = summarizer.summarize_all_articles(unique_articles)
 
         # Step 5: Categorize articles
-        logger.info("Categorizing articles...")
+        update_status("Organizing by topic... 📂", 8)
         categorized_articles = article_processor.categorize_articles(unique_articles)
 
         # Step 6: Generate digest summary
         digest_summary = summarizer.generate_digest_summary(categorized_articles)
 
         # Step 6.5: Save digest HTML to file
-        logger.info("Generating digest HTML...")
+        update_status("Making it pretty... 💅", 9)
         html_content = digest_generator.generate_html_digest(categorized_articles, digest_summary)
         digest_file_path = '/tmp/last_digest.html'
         with open(digest_file_path, 'w', encoding='utf-8') as f:
@@ -244,18 +256,20 @@ def process_and_send_digest(days_back=1):
         logger.info(f"Digest saved to {digest_file_path}")
 
         # Step 7: Send digest email
-        logger.info("Sending digest email...")
+        update_status("Sending to your inbox... 📨", 10)
         current_date = datetime.now().strftime("%B %d, %Y")
         subject = f"Your Daily News Digest - {current_date}"
         success = digest_generator.send_digest(config['digest_recipient'], subject, html_content)
 
         if success:
-            last_run_data['status'] = 'Success'
+            last_run_data['status'] = 'Success! 🎉'
+            last_run_data['step'] = 10
             last_run_data['error'] = None
             logger.info("Digest sent successfully!")
             return True
         else:
-            last_run_data['status'] = 'Failed to send email'
+            last_run_data['status'] = 'Failed to send email 😢'
+            last_run_data['step'] = 0
             logger.error("Failed to send digest email")
             return False
 
@@ -597,7 +611,11 @@ def api_status():
     """API endpoint to get current status."""
     config = get_config()
     return jsonify({
-        'last_run': last_run_data,
+        'last_run': {
+            **last_run_data,
+            'step': last_run_data.get('step', 0),
+            'total_steps': last_run_data.get('total_steps', 10)
+        },
         'scheduler_running': scheduler.running,
         'config': {
             'email_configured': bool(config['email_address']),
