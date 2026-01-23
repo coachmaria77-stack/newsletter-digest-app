@@ -155,21 +155,7 @@ window.addEventListener("DOMContentLoaded", function() {
 
     setTimeout(loadDigest, 100);
 
-    setInterval(function() {
-        fetch("/api/status")
-            .then(function(response) { return response.json(); })
-            .then(function(data) {
-                if (data.last_run && data.last_run.timestamp) {
-                    var el = document.querySelector(".status-item .value");
-                    if (el && el.textContent !== data.last_run.timestamp) {
-                        loadDigest();
-                    }
-                }
-            })
-            .catch(function(error) {
-                console.error("Error refreshing status:", error);
-            });
-    }, 30000);
+    // Auto-refresh removed - was causing page to jump while reading
 
     // Newsletter Management
     function loadNewsletters() {
