@@ -168,7 +168,7 @@ window.addEventListener("DOMContentLoaded", function() {
             })
             .catch(function(error) {
                 console.error("Error loading digest:", error);
-                digestFrame.srcdoc = '<div style="text-align: center; padding: 40px; font-family: -apple-system, BlinkMacSystemFont, sans-serif;"><img src="https://placekitten.com/300/200" alt="Cute kitten" style="border-radius: 12px; margin-bottom: 20px;"><h2 style="color: #667eea;">No digest yet!</h2><p style="color: #666;">Click Generate Digest Now above to create your first digest.</p></div>';
+                digestFrame.srcdoc = '<div style="text-align: center; padding: 40px; font-family: -apple-system, BlinkMacSystemFont, sans-serif;"><img src="https://cataas.com/cat/cute?width=300&height=200" style="border-radius: 12px; margin-bottom: 20px; max-width: 300px;"><h2 style="color: #667eea;">No digest yet!</h2><p style="color: #666;">Click Generate Digest Now above to create your first digest.</p></div>';
                 loadButton.textContent = "Refresh Digest";
                 loadButton.disabled = false;
             });
