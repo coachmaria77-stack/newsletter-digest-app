@@ -308,11 +308,11 @@ header h1 {
 
 @media (max-width: 768px) {
     header h1 {
-        font-size: 2em;
+        font-size: 1.3em;
     }
 
     .subtitle {
-        font-size: 1em;
+        font-size: 0.8em;
     }
 
     .status-grid {
@@ -320,6 +320,39 @@ header h1 {
     }
 
     .btn {
+        min-width: auto;
+        flex: 1 1 45%;
+        font-size: 0.75em;
+        padding: 6px 8px;
+    }
+
+    .newsletter-item {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .newsletter-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .newsletter-name,
+    .newsletter-email {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .btn-danger {
+        flex: none;
+        width: 100%;
+    }
+
+    .add-newsletter-form {
+        flex-direction: column;
+    }
+
+    .input-field {
         min-width: 100%;
     }
 }

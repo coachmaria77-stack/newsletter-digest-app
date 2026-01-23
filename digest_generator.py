@@ -143,6 +143,51 @@ class DigestGenerator:
             font-size: 14px;
             color: #2c5aa0;
         }}
+        .article-header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 10px;
+            gap: 10px;
+        }}
+        .article-buttons {{
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }}
+        .article-buttons button {{
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            white-space: nowrap;
+        }}
+        @media (max-width: 600px) {{
+            body {{
+                padding: 10px;
+            }}
+            .container {{
+                padding: 15px;
+            }}
+            h1 {{
+                font-size: 20px;
+            }}
+            .article-header {{
+                flex-direction: column;
+            }}
+            .article-buttons {{
+                width: 100%;
+                justify-content: flex-start;
+            }}
+            .article-buttons button {{
+                flex: 1;
+                min-width: 0;
+                padding: 8px 6px;
+                font-size: 11px;
+            }}
+        }}
     </style>
 </head>
 <body>
@@ -184,27 +229,15 @@ class DigestGenerator:
 
                 html += f"""
             <div class="article" data-url="{safe_url}" data-title="{safe_title}" data-source="{safe_source}">
-                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
-                    <div class="article-title" style="flex: 1;">
+                <div class="article-header">
+                    <div class="article-title">
                         <a href="{article['url']}" target="_blank">{article['title']}</a>
                     </div>
-                    <div style="display: flex; gap: 8px; margin-left: 16px;">
-                        <button class="vote-btn" data-vote="1"
-                                style="background: #48bb78; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px;">
-                            👍
-                        </button>
-                        <button class="vote-btn" data-vote="-1"
-                                style="background: #f56565; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px;">
-                            👎
-                        </button>
-                        <button class="read-btn"
-                                style="background: #4299e1; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px;">
-                            ✓ Read
-                        </button>
-                        <button class="junk-btn"
-                                style="background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px;">
-                            🗑️ Junk
-                        </button>
+                    <div class="article-buttons">
+                        <button class="vote-btn" data-vote="1" style="background: #48bb78; color: white;">👍</button>
+                        <button class="vote-btn" data-vote="-1" style="background: #f56565; color: white;">👎</button>
+                        <button class="read-btn" style="background: #4299e1; color: white;">✓ Read</button>
+                        <button class="junk-btn" style="background: #dc3545; color: white;">🗑️ Junk</button>
                     </div>
                 </div>
                 <div class="article-meta">
