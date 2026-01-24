@@ -37,21 +37,6 @@
                 <div id="actionStatus" class="action-status"></div>
             </div>
 
-            <!-- Newsletter Management -->
-            <div class="card">
-                <h2>📧 Newsletter Senders</h2>
-                <div class="newsletter-section">
-                    <div class="add-newsletter-form">
-                        <input type="email" id="newsletterEmail" placeholder="sender@newsletter.com" class="input-field" autocomplete="off">
-                        <input type="text" id="newsletterName" placeholder="Newsletter name (optional)" class="input-field" autocomplete="off">
-                        <button id="addNewsletter" class="btn btn-primary">Add Newsletter</button>
-                    </div>
-                    <div id="newsletterList" class="newsletter-list">
-                        <p>Loading newsletters...</p>
-                    </div>
-                </div>
-            </div>
-
             <!-- Last Run Status -->
             <div class="card" id="lastRunCard">
                 <h2>📊 Last Run Status</h2>
@@ -105,6 +90,21 @@
                 </div>
                 <div id="digestContent" style="margin-top: 8px;">
                     <iframe id="digestFrame" style="width: 100%; min-height: 350px; border: 1px solid #e0e0e0; border-radius: 6px;"></iframe>
+                </div>
+            </div>
+
+            <!-- Newsletter Management -->
+            <div class="card">
+                <h2>📧 Newsletter Senders</h2>
+                <div class="newsletter-section">
+                    <div class="add-newsletter-form">
+                        <input type="email" id="newsletterEmail" placeholder="sender@newsletter.com" class="input-field" autocomplete="off">
+                        <input type="text" id="newsletterName" placeholder="Newsletter name (optional)" class="input-field" autocomplete="off">
+                        <button id="addNewsletter" class="btn btn-primary">Add Newsletter</button>
+                    </div>
+                    <div id="newsletterList" class="newsletter-list">
+                        <p>Loading newsletters...</p>
+                    </div>
                 </div>
             </div>
 
