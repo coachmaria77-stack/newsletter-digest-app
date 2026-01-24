@@ -308,6 +308,11 @@ class DigestGenerator:
         document.querySelectorAll('.read-btn').forEach(btn => {{
             btn.addEventListener('click', function() {{
                 const data = getArticleData(this);
+                const button = this;
+                const article = button.closest('.article');
+
+                button.disabled = true;
+                button.textContent = '...';
 
                 fetch(baseUrl + '/api/mark-read', {{
                     method: 'POST',
@@ -321,12 +326,25 @@ class DigestGenerator:
                 .then(response => response.json())
                 .then(result => {{
                     if (result.success) {{
-                        alert('✓ Marked as read!');
+                        button.textContent = '✓ Done';
+                        button.style.backgroundColor = '#28a745';
+                        // Hide the article after a short delay
+                        setTimeout(() => {{
+                            article.style.opacity = '0';
+                            article.style.transition = 'opacity 0.3s';
+                            setTimeout(() => article.style.display = 'none', 300);
+                        }}, 500);
                     }} else {{
+                        button.disabled = false;
+                        button.textContent = '✓ Read';
                         alert('Error: ' + result.message);
                     }}
                 }})
-                .catch(error => alert('Error: ' + error));
+                .catch(error => {{
+                    button.disabled = false;
+                    button.textContent = '✓ Read';
+                    alert('Error: ' + error);
+                }});
             }});
         }});
 
