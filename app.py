@@ -238,29 +238,8 @@ def process_and_send_digest(days_back=1):
             last_run_data['article_count'] = 0
             return False
 
-        # Step 3.6: Apply learning from votes
+        # Step 3.6: Apply learning from votes (sorting only, filtering disabled for now)
         if db:
-            # Get keywords from downvoted articles to filter similar content
-            downvoted_keywords = db.get_downvoted_keywords()
-            if downvoted_keywords:
-                logger.info(f"Filtering articles matching {len(downvoted_keywords)} downvoted keywords")
-                before_count = len(unique_articles)
-
-                filtered_articles = []
-                for article in unique_articles:
-                    title_lower = article.get('title', '').lower()
-                    # Check if any downvoted keyword appears in title
-                    matches_downvoted = any(kw in title_lower for kw in downvoted_keywords)
-                    if not matches_downvoted:
-                        filtered_articles.append(article)
-                    else:
-                        logger.info(f"Filtered out (matches downvoted topic): {article.get('title', 'Unknown')[:50]}")
-
-                unique_articles = filtered_articles
-                filtered_count = before_count - len(unique_articles)
-                if filtered_count > 0:
-                    logger.info(f"Filtered out {filtered_count} articles matching downvoted topics")
-
             # Sort articles: upvoted sources first
             source_scores = db.get_source_scores()
             if source_scores:
