@@ -52,6 +52,14 @@ function startPolling() {
                         stopPolling();
                         updateProgress(0, 10, "");
                         showStatus("Digest complete! " + status, "success");
+
+                        // Auto-load digest on success
+                        if (status.indexOf("Success") !== -1) {
+                            setTimeout(function() {
+                                var loadBtn = document.getElementById("loadDigest");
+                                if (loadBtn) loadBtn.click();
+                            }, 500);
+                        }
                     }
                 }
             })

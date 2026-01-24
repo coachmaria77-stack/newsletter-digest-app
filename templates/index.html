@@ -133,13 +133,13 @@
                         <span class="value">{{ config['digest_recipient'] or config['email_address'] or 'Not set' }}</span>
                     </div>
                     <div class="status-item">
-                        <span class="label">Daily Schedule:</span>
-                        <span class="value">{{ '%02d:%02d' % (config['digest_hour'], config['digest_minute']) }}</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="label">Scheduler Status:</span>
+                        <span class="label">Auto-Generate:</span>
                         <span class="value {{ 'success' if scheduler_running else 'error' }}">
-                            {{ 'Running' if scheduler_running else 'Stopped' }}
+                            {% if scheduler_running %}
+                                Daily at {{ '%02d:%02d' % (config['digest_hour'], config['digest_minute']) }} ✓
+                            {% else %}
+                                Not scheduled
+                            {% endif %}
                         </span>
                     </div>
                 </div>

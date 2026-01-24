@@ -236,3 +236,35 @@ class SupabaseDB:
         except Exception as e:
             logger.error(f"Failed to get newsletter senders: {e}")
             return []
+
+    def get_source_scores(self) -> Dict[str, int]:
+        """
+        Get aggregate vote scores by source.
+        Returns dict of source -> net score (upvotes - downvotes).
+        """
+        try:
+            result = self.client.table('article_interactions').select(
+                'article_source, vote'
+            ).neq('vote', 0).execute()
+
+            scores = {}
+            for row in result.data:
+                source = row.get('article_source', '').lower().strip()
+                if source:
+                    vote = row.get('vote', 0)
+                    scores[source] = scores.get(source, 0) + vote
+
+            logger.info(f"Calculated scores for {len(scores)} sources")
+            return scores
+
+        except Exception as e:
+            logger.error(f"Failed to get source scores: {e}")
+            return {}
+
+    def get_downvoted_sources(self, threshold: int = -2) -> List[str]:
+        """
+        Get list of sources with net negative votes below threshold.
+        These sources will be deprioritized.
+        """
+        scores = self.get_source_scores()
+        return [source for source, score in scores.items() if score <= threshold]

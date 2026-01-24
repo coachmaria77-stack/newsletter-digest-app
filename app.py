@@ -238,6 +238,30 @@ def process_and_send_digest(days_back=1):
             last_run_data['article_count'] = 0
             return False
 
+        # Step 3.6: Apply learning from votes
+        if db:
+            source_scores = db.get_source_scores()
+            if source_scores:
+                logger.info(f"Applying vote-based learning from {len(source_scores)} scored sources")
+
+                # Filter out heavily downvoted sources (score <= -3)
+                before_count = len(unique_articles)
+                unique_articles = [
+                    a for a in unique_articles
+                    if source_scores.get(a.get('newsletter_sender', '').lower().strip(), 0) > -3
+                ]
+                filtered_count = before_count - len(unique_articles)
+                if filtered_count > 0:
+                    logger.info(f"Filtered out {filtered_count} articles from heavily downvoted sources")
+
+                # Sort articles: upvoted sources first, then neutral, then slightly downvoted
+                def get_source_score(article):
+                    source = article.get('newsletter_sender', '').lower().strip()
+                    return source_scores.get(source, 0)
+
+                unique_articles.sort(key=get_source_score, reverse=True)
+                logger.info("Articles sorted by source preference")
+
         last_run_data['article_count'] = len(unique_articles)
 
         # Step 4: Generate summaries
@@ -705,10 +729,15 @@ def start_scheduler():
     logger.info(f"Scheduler started. Daily digest scheduled for {config['digest_hour']:02d}:{config['digest_minute']:02d}")
 
 
-if __name__ == '__main__':
-    # Start scheduler
+# Start scheduler when app loads (works with gunicorn)
+# Only start if not already running
+try:
     start_scheduler()
+except Exception as e:
+    logger.error(f"Failed to start scheduler: {e}")
 
+
+if __name__ == '__main__':
     # Run Flask app
     port = int(os.getenv('PORT', 5000))
     debug = os.getenv('DEBUG', 'False').lower() == 'true'
