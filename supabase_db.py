@@ -268,3 +268,41 @@ class SupabaseDB:
         """
         scores = self.get_source_scores()
         return [source for source, score in scores.items() if score <= threshold]
+
+    def get_downvoted_keywords(self) -> List[str]:
+        """
+        Extract keywords from downvoted article titles.
+        These will be used to filter similar articles.
+        """
+        try:
+            result = self.client.table('article_interactions').select(
+                'article_title'
+            ).eq('vote', -1).execute()
+
+            # Extract significant words from downvoted titles
+            import re
+            stop_words = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
+                         'of', 'with', 'by', 'from', 'as', 'is', 'was', 'are', 'were', 'been',
+                         'be', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would',
+                         'could', 'should', 'may', 'might', 'must', 'can', 'this', 'that',
+                         'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they',
+                         'what', 'which', 'who', 'whom', 'how', 'why', 'when', 'where',
+                         'your', 'our', 'their', 'its', 'my', 'his', 'her', 'new', 'now'}
+
+            word_counts = {}
+            for row in result.data:
+                title = row.get('article_title', '').lower()
+                # Extract words (3+ chars, not numbers)
+                words = re.findall(r'[a-z]{3,}', title)
+                for word in words:
+                    if word not in stop_words:
+                        word_counts[word] = word_counts.get(word, 0) + 1
+
+            # Return words that appear in 2+ downvoted articles (indicates pattern)
+            keywords = [word for word, count in word_counts.items() if count >= 2]
+            logger.info(f"Found {len(keywords)} downvoted keywords: {keywords[:10]}")
+            return keywords
+
+        except Exception as e:
+            logger.error(f"Failed to get downvoted keywords: {e}")
+            return []

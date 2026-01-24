@@ -240,21 +240,30 @@ def process_and_send_digest(days_back=1):
 
         # Step 3.6: Apply learning from votes
         if db:
-            source_scores = db.get_source_scores()
-            if source_scores:
-                logger.info(f"Applying vote-based learning from {len(source_scores)} scored sources")
-
-                # Filter out heavily downvoted sources (score <= -3)
+            # Get keywords from downvoted articles to filter similar content
+            downvoted_keywords = db.get_downvoted_keywords()
+            if downvoted_keywords:
+                logger.info(f"Filtering articles matching {len(downvoted_keywords)} downvoted keywords")
                 before_count = len(unique_articles)
-                unique_articles = [
-                    a for a in unique_articles
-                    if source_scores.get(a.get('newsletter_sender', '').lower().strip(), 0) > -3
-                ]
+
+                filtered_articles = []
+                for article in unique_articles:
+                    title_lower = article.get('title', '').lower()
+                    # Check if any downvoted keyword appears in title
+                    matches_downvoted = any(kw in title_lower for kw in downvoted_keywords)
+                    if not matches_downvoted:
+                        filtered_articles.append(article)
+                    else:
+                        logger.info(f"Filtered out (matches downvoted topic): {article.get('title', 'Unknown')[:50]}")
+
+                unique_articles = filtered_articles
                 filtered_count = before_count - len(unique_articles)
                 if filtered_count > 0:
-                    logger.info(f"Filtered out {filtered_count} articles from heavily downvoted sources")
+                    logger.info(f"Filtered out {filtered_count} articles matching downvoted topics")
 
-                # Sort articles: upvoted sources first, then neutral, then slightly downvoted
+            # Sort articles: upvoted sources first
+            source_scores = db.get_source_scores()
+            if source_scores:
                 def get_source_score(article):
                     source = article.get('newsletter_sender', '').lower().strip()
                     return source_scores.get(source, 0)
