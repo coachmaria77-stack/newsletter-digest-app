@@ -119,11 +119,49 @@ class EmailProcessor:
         return text_content
 
     def extract_urls(self, text: str) -> List[str]:
-        """Extract URLs from text content."""
-        # Find all URLs in the text
+        """Extract URLs from text/HTML content."""
+        from bs4 import BeautifulSoup
+        from urllib.parse import unquote, urlparse, parse_qs
+
+        urls = set()
+
+        # Method 1: Parse HTML and extract href attributes
+        try:
+            soup = BeautifulSoup(text, 'html.parser')
+            for a_tag in soup.find_all('a', href=True):
+                href = a_tag['href']
+                if href.startswith('http'):
+                    urls.add(href)
+        except:
+            pass
+
+        # Method 2: Regex fallback for any URLs in text
         url_pattern = r'https?://(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&/=]*)'
-        urls = re.findall(url_pattern, text)
-        
+        regex_urls = re.findall(url_pattern, text)
+        urls.update(regex_urls)
+
+        # Method 3: Decode URL-encoded URLs and extract wrapped URLs from redirects
+        decoded_urls = set()
+        for url in urls:
+            # Decode URL-encoded characters
+            decoded = unquote(url)
+            decoded_urls.add(decoded)
+
+            # Check if this is a redirect URL wrapping another URL
+            try:
+                parsed = urlparse(decoded)
+                query_params = parse_qs(parsed.query)
+                # Common redirect parameter names
+                for param in ['url', 'u', 'redirect', 'link', 'target', 'destination', 'goto']:
+                    if param in query_params:
+                        wrapped_url = query_params[param][0]
+                        if wrapped_url.startswith('http'):
+                            decoded_urls.add(unquote(wrapped_url))
+            except:
+                pass
+
+        urls = decoded_urls
+
         # Comprehensive filter for junk URLs
         filtered_urls = []
         exclude_patterns = [
@@ -137,30 +175,31 @@ class EmailProcessor:
             'schema.org', 'mailto:', 'tel:', 'sms:',
             '/feed', '/rss', '/sitemap'
         ]
-        
-        # Exclude URLs that are just domain homepages (end with .com or .com/)
+
+        # Exclude URLs that are just domain homepages
         exclude_domains = [
             'facebook.com', 'instagram.com', 'linkedin.com', 'twitter.com',
             'youtube.com', 'tiktok.com', 'pinterest.com'
         ]
-        
+
         for url in urls:
             url_lower = url.lower()
-            
+
             # Skip if matches exclude patterns
             if any(pattern in url_lower for pattern in exclude_patterns):
                 continue
-            
+
             # Skip if it's just a social media homepage
             skip = False
             for domain in exclude_domains:
                 if url_lower == f'https://{domain}' or url_lower == f'https://{domain}/' or url_lower == f'http://{domain}' or url_lower == f'http://{domain}/':
                     skip = True
                     break
-            
+
             if not skip:
                 filtered_urls.append(url)
-        
+
+        logger.info(f"Extracted {len(filtered_urls)} URLs from content")
         return filtered_urls
 
     def fetch_newsletters(self, days_back: int = 1, specific_senders: Optional[List[str]] = None) -> List[Dict]:
